@@ -68,7 +68,7 @@ get_domain() {
                 ADMIN_DOMAIN=""
             fi
         fi
-    done
+    fi
     
     echo -e "${BLUE}Domains configured:${NC}"
     echo "Main system: $MAIN_DOMAIN"
