@@ -443,6 +443,17 @@ EOF
 configure_nginx() {
     log "Configuring Nginx..."
     
+    # Stop nginx to prevent conflicts during configuration
+    systemctl stop nginx
+    
+    # Remove any existing configurations that might conflict
+    rm -f /etc/nginx/sites-available/member-ringing* 2>/dev/null || true
+    rm -f /etc/nginx/sites-available/admin-ringing* 2>/dev/null || true
+    rm -f /etc/nginx/sites-available/pocketbase* 2>/dev/null || true
+    rm -f /etc/nginx/sites-enabled/member-ringing* 2>/dev/null || true
+    rm -f /etc/nginx/sites-enabled/admin-ringing* 2>/dev/null || true
+    rm -f /etc/nginx/sites-enabled/pocketbase* 2>/dev/null || true
+    
     # Remove default site
     rm -f /etc/nginx/sites-enabled/default
     
@@ -523,9 +534,28 @@ EOF
     # Enable site
     ln -sf "/etc/nginx/sites-available/member-management" "/etc/nginx/sites-enabled/"
     
+    # Verify no conflicting configurations exist
+    log "Checking for configuration conflicts..."
+    if nginx -t 2>&1 | grep -q "conflicting server name"; then
+        warn "Found conflicting server configurations. Cleaning up..."
+        
+        # List all enabled sites
+        for site in /etc/nginx/sites-enabled/*; do
+            if [[ -f "$site" ]] && [[ "$(basename "$site")" != "member-management" ]]; then
+                log "Removing conflicting site: $(basename "$site")"
+                rm -f "$site"
+            fi
+        done
+    fi
+    
     # Test configuration
-    nginx -t
-    systemctl restart nginx
+    if nginx -t; then
+        log "Nginx configuration test passed"
+        systemctl start nginx
+    else
+        error "Nginx configuration test failed"
+    fi
+    
     systemctl enable nginx
 }
 
