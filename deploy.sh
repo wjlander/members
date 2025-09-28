@@ -213,10 +213,21 @@ EOF
 configure_nginx() {
     log "Configuring Nginx..."
     
+    # Start Nginx if not running
+    if ! systemctl is-active --quiet nginx; then
+        systemctl start nginx
+    fi
+    
     # Backup default config
     if [[ -f "/etc/nginx/sites-enabled/default" ]]; then
         mv "/etc/nginx/sites-enabled/default" "/etc/nginx/sites-enabled/default.bak"
     fi
+    
+    # Remove any existing configurations that might conflict
+    rm -f /etc/nginx/sites-available/member-ringing
+    rm -f /etc/nginx/sites-available/admin-ringing
+    rm -f /etc/nginx/sites-enabled/member-ringing
+    rm -f /etc/nginx/sites-enabled/admin-ringing
     
     # Create main site configuration
     cat > "/etc/nginx/sites-available/member-ringing" << EOF
@@ -249,6 +260,15 @@ server {
     
     # Serve static files from PocketBase
     location /api/files/ {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+    
+    # API access
+    location /api/ {
         proxy_pass http://127.0.0.1:8080;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -302,9 +322,13 @@ server {
         return 301 \$scheme://\$host/_/;
     }
     
-    # Block other paths
-    location / {
-        return 404;
+    # Serve static files for admin
+    location /api/files/ {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
     }
 }
 EOF
@@ -315,7 +339,7 @@ EOF
     
     nginx -t || error "Nginx configuration test failed"
     
-    systemctl reload nginx
+    systemctl restart nginx
 }
 
 # Setup SSL certificate
@@ -454,18 +478,39 @@ EOF
 initialize_pocketbase() {
     log "Starting PocketBase and initializing schema..."
     
+    # Ensure PocketBase service is enabled and started
+    systemctl enable pocketbase
     systemctl start pocketbase
     
     # Wait for PocketBase to start
-    sleep 5
+    sleep 10
+    
+    # Check multiple times if needed
+    for i in {1..5}; do
+        if systemctl is-active --quiet pocketbase; then
+            break
+        fi
+        log "Waiting for PocketBase to start (attempt $i/5)..."
+        sleep 5
+    done
     
     # Check if PocketBase is running
     if ! systemctl is-active --quiet pocketbase; then
         error "PocketBase failed to start. Check logs: journalctl -u pocketbase"
     fi
     
+    # Test if PocketBase is responding
+    for i in {1..10}; do
+        if curl -s http://127.0.0.1:8080/api/health >/dev/null 2>&1; then
+            log "PocketBase is responding to API requests"
+            break
+        fi
+        log "Waiting for PocketBase API to be ready (attempt $i/10)..."
+        sleep 3
+    done
+    
     log "PocketBase started successfully"
-    log "Admin panel available at: http://127.0.0.1:8080/_/"
+    log "Local admin panel available at: http://127.0.0.1:8080/_/"
 }
 
 # Create initial configuration file
@@ -566,16 +611,25 @@ main() {
     echo -e "${GREEN}========================================${NC}"
     echo
     echo -e "${BLUE}Next Steps:${NC}"
-    echo "1. Access the main system: https://$MAIN_DOMAIN/"
-    echo "2. Access the admin panel: https://$ADMIN_DOMAIN/_/"
+    echo "1. Configure DNS to point both domains to this server's IP"
+    echo "2. Run SSL setup: sudo certbot --nginx -d $MAIN_DOMAIN -d $ADMIN_DOMAIN"
+    echo "3. Access the main system: https://$MAIN_DOMAIN/"
+    echo "4. Access the admin panel: https://$ADMIN_DOMAIN/_/"
+    echo "   (or temporarily: http://$(curl -s ipecho.net/plain):8080/_/)"
     echo "3. Create your first admin user"
     echo "4. Import the database schema"
     echo "5. Configure your associations"
     echo
     echo -e "${BLUE}System Information:${NC}"
     echo "- Service status: $(systemctl is-active pocketbase)"
+    echo "- Server IP: $(curl -s ipecho.net/plain || echo 'Unable to detect')"
     echo "- View logs: sudo journalctl -u pocketbase -f"
     echo "- Configuration: $APP_DIR/SETUP_INFO.md"
+    echo
+    echo -e "${YELLOW}DNS Configuration Required:${NC}"
+    echo "Point these domains to your server IP:"
+    echo "- $MAIN_DOMAIN"
+    echo "- $ADMIN_DOMAIN"
     echo
     echo -e "${YELLOW}Important:${NC} Save the admin credentials in a secure location!"
     echo
