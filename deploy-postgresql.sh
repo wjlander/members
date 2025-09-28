@@ -117,12 +117,49 @@ install_dependencies() {
         postgresql-$POSTGRES_VERSION \
         postgresql-contrib-$POSTGRES_VERSION \
         postgresql-client-$POSTGRES_VERSION \
-        nodejs \
-        npm \
         git \
         build-essential \
         python3-pip \
         python3-venv
+    
+    # Install Node.js and npm separately to avoid conflicts
+    install_nodejs
+}
+
+# Install Node.js and npm with conflict resolution
+install_nodejs() {
+    log "Installing Node.js and npm..."
+    
+    # Remove any existing nodejs/npm packages that might conflict
+    apt-get remove -y nodejs npm node-* 2>/dev/null || true
+    
+    # Clean up any leftover files
+    rm -rf /usr/lib/node_modules 2>/dev/null || true
+    rm -f /usr/bin/node /usr/bin/npm /usr/bin/npx 2>/dev/null || true
+    
+    # Add NodeSource repository if not already added
+    if ! grep -q "nodesource" /etc/apt/sources.list.d/* 2>/dev/null; then
+        log "Adding NodeSource repository..."
+        curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+    fi
+    
+    # Update package list
+    apt-get update
+    
+    # Install nodejs (which includes npm from NodeSource)
+    apt-get install -y nodejs
+    
+    # Verify installation
+    if ! command -v node >/dev/null 2>&1; then
+        error "Node.js installation failed"
+    fi
+    
+    if ! command -v npm >/dev/null 2>&1; then
+        error "npm installation failed"
+    fi
+    
+    log "Node.js version: $(node --version)"
+    log "npm version: $(npm --version)"
 }
 
 # Setup PostgreSQL
