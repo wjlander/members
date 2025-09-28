@@ -65,7 +65,7 @@ curl -sSL https://raw.githubusercontent.com/your-repo/member-management/main/dep
 
 3. Access the main system at `https://your-domain.com/`
 
-4. Access the admin panel at `https://admin.your-domain.com/`
+4. Access the admin panel at `https://p.your-domain.com/`
 
 5. Complete initial setup and create your first association
 ## Cost Breakdown (Monthly)

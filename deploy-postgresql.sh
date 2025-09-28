@@ -61,7 +61,7 @@ get_configuration() {
     
     # Domains
     MAIN_DOMAIN="member.ringing.org.uk"
-    ADMIN_DOMAIN="admin.ringing.org.uk"
+    ADMIN_DOMAIN="p.ringing.org.uk"
     
     echo -e "${BLUE}Default domains:${NC}"
     echo "Main system: $MAIN_DOMAIN"
@@ -75,7 +75,7 @@ get_configuration() {
         done
         
         while [[ -z "$ADMIN_DOMAIN" ]]; do
-            read -p "Enter admin domain (e.g., admin.yourorg.com): " ADMIN_DOMAIN
+            read -p "Enter admin domain (e.g., p.yourorg.com): " ADMIN_DOMAIN
         done
     fi
     

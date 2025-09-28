@@ -62,7 +62,7 @@ get_domain() {
         done
         
         while [[ -z "$ADMIN_DOMAIN" ]]; do
-            read -p "Enter admin domain (e.g., admin.yourorg.com): " ADMIN_DOMAIN
+            read -p "Enter admin domain (e.g., p.yourorg.com): " ADMIN_DOMAIN
             if [[ ! "$ADMIN_DOMAIN" =~ ^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$ ]]; then
                 echo "Invalid domain format. Please try again."
                 ADMIN_DOMAIN=""
