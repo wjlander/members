@@ -451,58 +451,6 @@ configure_nginx() {
         sed -i '/http {/a\\tlimit_req_zone $binary_remote_addr zone=api:10m rate=10r/m;\n\tlimit_req_zone $binary_remote_addr zone=login:10m rate=5r/m;' /etc/nginx/nginx.conf
     fi
     
-    # Create main site configuration
-    cat > "/etc/nginx/sites-available/member-management" << EOF
-# Main application server
-server {
-    listen 80;
-    server_name $MAIN_DOMAIN;
-    
-    rm -f /etc/nginx/sites-available/member-management
-    rm -f /etc/nginx/sites-enabled/member-management
-    # Security headers
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-    
-    # File upload size limit
-    client_max_body_size 100M;
-    
-    # Health check endpoint
-    location /health {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-    
-    # API endpoints with rate limiting
-    location /api/ {
-        limit_req zone=api burst=20 nodelay;
-        proxy_pass http://127.0.0.1:3000;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-    
-    # Main application
-    location / {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        
-        # WebSocket support
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_cache_bypass \$http_upgrade;
-    }
-}
     # Create single site configuration for both domains
     cat > "/etc/nginx/sites-available/member-management" << EOF
 # Main application server for both domains
@@ -516,9 +464,9 @@ server {
     add_header X-XSS-Protection "1; mode=block" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     
-    # Admin interface
-    location / {
-        limit_req zone=login burst=5 nodelay;
+    # File upload size limit
+    client_max_body_size 100M;
+    
     # Health check endpoint
     location /health {
         proxy_pass http://127.0.0.1:3000;
@@ -562,7 +510,7 @@ server {
     }
     
     # Main application
-        
+    location / {
         proxy_pass http://127.0.0.1:3000;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -575,11 +523,65 @@ EOF
     # Enable site
     ln -sf "/etc/nginx/sites-available/member-management" "/etc/nginx/sites-enabled/"
     
+    # Test configuration
+    nginx -t
+    systemctl restart nginx
+    systemctl enable nginx
+}
+
+# Configure firewall
+configure_firewall() {
+    log "Configuring firewall..."
+    
+    # Reset UFW to defaults
+    ufw --force reset
+    
+    # Default policies
+    ufw default deny incoming
+    ufw default allow outgoing
+    
+    # Allow SSH, HTTP, HTTPS
+    ufw allow ssh
+    ufw allow 'Nginx Full'
+    
+    # Enable firewall
+    ufw --force enable
+    
+    log "Firewall configured successfully"
+}
+
+# Setup SSL certificate
+setup_ssl() {
+    log "Setting up SSL certificate with Let's Encrypt..."
+    
+    # Test if domain points to this server
+    PUBLIC_IP=$(curl -s ipecho.net/plain || curl -s icanhazip.com)
+    MAIN_DOMAIN_IP=$(dig +short "$MAIN_DOMAIN" | head -n1)
+    ADMIN_DOMAIN_IP=$(dig +short "$ADMIN_DOMAIN" | head -n1)
+    
+    if [[ "$PUBLIC_IP" != "$MAIN_DOMAIN_IP" ]] || [[ "$PUBLIC_IP" != "$ADMIN_DOMAIN_IP" ]]; then
+        warn "One or both domains do not point to this server"
+        warn "Main domain $MAIN_DOMAIN: $MAIN_DOMAIN_IP (should be $PUBLIC_IP)"
         warn "Admin domain $ADMIN_DOMAIN: $ADMIN_DOMAIN_IP (should be $PUBLIC_IP)"
         warn "SSL certificate setup skipped. Please configure DNS and run:"
         warn "certbot --nginx -d $MAIN_DOMAIN -d $ADMIN_DOMAIN"
+        return
+    fi
+    
+    # Setup SSL for both domains
+    certbot --nginx --non-interactive --agree-tos --register-unsafely-without-email -d "$MAIN_DOMAIN" -d "$ADMIN_DOMAIN"
+    
+    # Setup auto-renewal
+    systemctl enable certbot.timer
+    systemctl start certbot.timer
+}
 
+# Setup fail2ban
+setup_fail2ban() {
+    log "Setting up fail2ban..."
+    
     cat > "/etc/fail2ban/jail.local" << 'EOF'
+[DEFAULT]
 enabled = true
 filter = member-management
 logpath = /var/log/member-management/app.log
