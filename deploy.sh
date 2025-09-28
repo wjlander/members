@@ -149,14 +149,12 @@ setup_user_and_directories() {
     mkdir -p "$DATA_DIR/backups"
     mkdir -p "/var/log/pocketbase"
     
-    # Set proper ownership and permissions
+    # Set proper ownership and permissions for directories
     chown -R "$APP_USER:$APP_USER" "$DATA_DIR"
     chown -R "$APP_USER:$APP_USER" "/var/log/pocketbase"
-    chown "$APP_USER:$APP_USER" "$APP_DIR/pocketbase"
     chmod 755 "$DATA_DIR"
     chmod 755 "/var/log/pocketbase"
     chmod 755 "$APP_DIR"
-    chmod +x "$APP_DIR/pocketbase"
     
     # Verify permissions
     log "Verifying user and permissions..."
