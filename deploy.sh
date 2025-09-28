@@ -67,7 +67,7 @@ get_domain() {
                 echo "Invalid domain format. Please try again."
                 ADMIN_DOMAIN=""
             fi
-        fi
+        done
     fi
     
     echo -e "${BLUE}Domains configured:${NC}"

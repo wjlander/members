@@ -619,4 +619,204 @@
       "options": {}
     }
   ]
+  },
+  {
+    "id": "mailing_lists",
+    "name": "mailing_lists",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "id": "association",
+        "name": "association",
+        "type": "relation",
+        "system": false,
+        "required": true,
+        "unique": false,
+        "options": {
+          "collectionId": "associations",
+          "cascadeDelete": false,
+          "minSelect": 1,
+          "maxSelect": 1,
+          "displayFields": ["name"]
+        }
+      },
+      {
+        "id": "name",
+        "name": "name",
+        "type": "text",
+        "system": false,
+        "required": true,
+        "unique": false,
+        "options": {
+          "min": 1,
+          "max": 255,
+          "pattern": ""
+        }
+      },
+      {
+        "id": "description",
+        "name": "description",
+        "type": "text",
+        "system": false,
+        "required": false,
+        "unique": false,
+        "options": {
+          "min": 0,
+          "max": 1000,
+          "pattern": ""
+        }
+      },
+      {
+        "id": "type",
+        "name": "type",
+        "type": "select",
+        "system": false,
+        "required": true,
+        "unique": false,
+        "options": {
+          "maxSelect": 1,
+          "values": ["general", "announcements", "events", "newsletter", "urgent", "social"]
+        }
+      },
+      {
+        "id": "status",
+        "name": "status",
+        "type": "select",
+        "system": false,
+        "required": true,
+        "unique": false,
+        "options": {
+          "maxSelect": 1,
+          "values": ["active", "inactive", "archived"]
+        }
+      },
+      {
+        "id": "auto_subscribe_new_members",
+        "name": "auto_subscribe_new_members",
+        "type": "bool",
+        "system": false,
+        "required": false,
+        "unique": false,
+        "options": {}
+      },
+      {
+        "id": "moderator_email",
+        "name": "moderator_email",
+        "type": "email",
+        "system": false,
+        "required": false,
+        "unique": false,
+        "options": {
+          "exceptDomains": null,
+          "onlyDomains": null
+        }
+      }
+    ],
+    "indexes": [
+      "CREATE INDEX `idx_mailing_lists_association` ON `mailing_lists` (`association`)",
+      "CREATE INDEX `idx_mailing_lists_status` ON `mailing_lists` (`status`)",
+      "CREATE INDEX `idx_mailing_lists_type` ON `mailing_lists` (`type`)"
+    ],
+    "listRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || @request.auth.association = association)",
+    "viewRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || @request.auth.association = association)",
+    "createRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || (@request.auth.association = association && @request.auth.role = 'admin'))",
+    "updateRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || (@request.auth.association = association && @request.auth.role = 'admin'))",
+    "deleteRule": "@request.auth.role = 'super_admin' || (@request.auth.association = association && @request.auth.role = 'admin')",
+    "options": {}
+  },
+  {
+    "id": "mailing_list_subscriptions",
+    "name": "mailing_list_subscriptions",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "id": "member",
+        "name": "member",
+        "type": "relation",
+        "system": false,
+        "required": true,
+        "unique": false,
+        "options": {
+          "collectionId": "members",
+          "cascadeDelete": true,
+          "minSelect": 1,
+          "maxSelect": 1,
+          "displayFields": ["name", "email"]
+        }
+      },
+      {
+        "id": "mailing_list",
+        "name": "mailing_list",
+        "type": "relation",
+        "system": false,
+        "required": true,
+        "unique": false,
+        "options": {
+          "collectionId": "mailing_lists",
+          "cascadeDelete": true,
+          "minSelect": 1,
+          "maxSelect": 1,
+          "displayFields": ["name"]
+        }
+      },
+      {
+        "id": "status",
+        "name": "status",
+        "type": "select",
+        "system": false,
+        "required": true,
+        "unique": false,
+        "options": {
+          "maxSelect": 1,
+          "values": ["subscribed", "unsubscribed", "pending"]
+        }
+      },
+      {
+        "id": "subscribed_date",
+        "name": "subscribed_date",
+        "type": "date",
+        "system": false,
+        "required": false,
+        "unique": false,
+        "options": {
+          "min": "",
+          "max": ""
+        }
+      },
+      {
+        "id": "unsubscribed_date",
+        "name": "unsubscribed_date",
+        "type": "date",
+        "system": false,
+        "required": false,
+        "unique": false,
+        "options": {
+          "min": "",
+          "max": ""
+        }
+      },
+      {
+        "id": "preferences",
+        "name": "preferences",
+        "type": "json",
+        "system": false,
+        "required": false,
+        "unique": false,
+        "options": {}
+      }
+    ],
+    "indexes": [
+      "CREATE UNIQUE INDEX `idx_unique_member_list` ON `mailing_list_subscriptions` (`member`, `mailing_list`)",
+      "CREATE INDEX `idx_subscriptions_member` ON `mailing_list_subscriptions` (`member`)",
+      "CREATE INDEX `idx_subscriptions_mailing_list` ON `mailing_list_subscriptions` (`mailing_list`)",
+      "CREATE INDEX `idx_subscriptions_status` ON `mailing_list_subscriptions` (`status`)"
+    ],
+    "listRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || member.user = @request.auth.id || (@request.auth.role = 'admin' && member.association = @request.auth.association))",
+    "viewRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || member.user = @request.auth.id || (@request.auth.role = 'admin' && member.association = @request.auth.association))",
+    "createRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || member.user = @request.auth.id || (@request.auth.role = 'admin' && member.association = @request.auth.association))",
+    "updateRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || member.user = @request.auth.id || (@request.auth.role = 'admin' && member.association = @request.auth.association))",
+    "deleteRule": "@request.auth.role = 'super_admin' || member.user = @request.auth.id || (@request.auth.role = 'admin' && member.association = @request.auth.association)",
+    "options": {}
 }
