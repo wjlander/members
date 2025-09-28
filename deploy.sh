@@ -129,9 +129,18 @@ remove_existing_installation() {
 setup_user_and_directories() {
     log "Creating application user and directories..."
     
-    # Create user if doesn't exist
+    # Remove existing user if it exists (to ensure clean setup)
+    if id "$APP_USER" &>/dev/null; then
+        warn "Removing existing $APP_USER user..."
+        userdel -r "$APP_USER" 2>/dev/null || true
+    fi
+    
+    # Create fresh user with proper settings
+    useradd --system --shell /bin/false --home-dir "$DATA_DIR" --create-home "$APP_USER"
+    
+    # Verify user was created
     if ! id "$APP_USER" &>/dev/null; then
-        useradd --system --shell /bin/false --home-dir "$DATA_DIR" --create-home "$APP_USER"
+        error "Failed to create user $APP_USER"
     fi
     
     # Create directories
@@ -140,10 +149,20 @@ setup_user_and_directories() {
     mkdir -p "$DATA_DIR/backups"
     mkdir -p "/var/log/pocketbase"
     
-    # Set permissions
+    # Set proper ownership and permissions
     chown -R "$APP_USER:$APP_USER" "$DATA_DIR"
     chown -R "$APP_USER:$APP_USER" "/var/log/pocketbase"
+    chown "$APP_USER:$APP_USER" "$APP_DIR/pocketbase"
+    chmod 755 "$DATA_DIR"
+    chmod 755 "/var/log/pocketbase"
     chmod 755 "$APP_DIR"
+    chmod +x "$APP_DIR/pocketbase"
+    
+    # Verify permissions
+    log "Verifying user and permissions..."
+    ls -la "$APP_DIR/"
+    ls -la "$DATA_DIR/"
+    id "$APP_USER"
 }
 
 # Download and install PocketBase
@@ -164,12 +183,23 @@ install_pocketbase() {
     
     # Extract and install
     unzip -o pocketbase.zip
+    
+    # Verify binary exists and is executable
+    if [[ ! -f "pocketbase" ]]; then
+        error "PocketBase binary not found after extraction"
+    fi
+    
     mv pocketbase "$APP_DIR/"
     chmod +x "$APP_DIR/pocketbase"
-    chown "$APP_USER:$APP_USER" "$APP_DIR/pocketbase"
     
     # Cleanup
     rm -f pocketbase.zip LICENSE.md
+    
+    # Test PocketBase binary
+    log "Testing PocketBase binary..."
+    if ! "$APP_DIR/pocketbase" --help >/dev/null 2>&1; then
+        error "PocketBase binary is not working correctly"
+    fi
     
     log "PocketBase installed successfully"
 }
@@ -478,6 +508,18 @@ EOF
 initialize_pocketbase() {
     log "Starting PocketBase and initializing schema..."
     
+    # Final permission check before starting
+    chown -R "$APP_USER:$APP_USER" "$DATA_DIR"
+    chown -R "$APP_USER:$APP_USER" "/var/log/pocketbase"
+    chown "$APP_USER:$APP_USER" "$APP_DIR/pocketbase"
+    chmod +x "$APP_DIR/pocketbase"
+    
+    # Test if we can run PocketBase as the user
+    log "Testing PocketBase execution as $APP_USER..."
+    if ! sudo -u "$APP_USER" "$APP_DIR/pocketbase" --help >/dev/null 2>&1; then
+        error "Cannot execute PocketBase as user $APP_USER"
+    fi
+    
     # Ensure PocketBase service is enabled and started
     systemctl enable pocketbase
     systemctl start pocketbase
@@ -491,11 +533,16 @@ initialize_pocketbase() {
             break
         fi
         log "Waiting for PocketBase to start (attempt $i/5)..."
+        # Show recent logs for debugging
+        journalctl -u pocketbase --no-pager -l -n 5
         sleep 5
     done
     
     # Check if PocketBase is running
     if ! systemctl is-active --quiet pocketbase; then
+        error_log=$(journalctl -u pocketbase --no-pager -l -n 10)
+        log "Recent PocketBase logs:"
+        echo "$error_log"
         error "PocketBase failed to start. Check logs: journalctl -u pocketbase"
     fi
     
