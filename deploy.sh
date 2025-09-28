@@ -518,14 +518,6 @@ initialize_pocketbase() {
         error "Cannot execute PocketBase as user $APP_USER"
     fi
     
-    # Test PocketBase serve command manually first
-    log "Testing PocketBase serve command..."
-    timeout 10s sudo -u "$APP_USER" "$APP_DIR/pocketbase" serve --http=127.0.0.1:8090 --dir="$DATA_DIR" || {
-        log "PocketBase serve test failed. Checking detailed error..."
-        sudo -u "$APP_USER" "$APP_DIR/pocketbase" serve --http=127.0.0.1:8090 --dir="$DATA_DIR" 2>&1 | head -20
-        error "PocketBase serve command failed"
-    }
-    
     # Ensure PocketBase service is enabled and started
     systemctl enable pocketbase
     systemctl start pocketbase
