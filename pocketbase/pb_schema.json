@@ -1,7 +1,7 @@
 [
   {
-    "id": "member_associations",
-    "name": "member_associations",
+    "id": "organizations",
+    "name": "organizations",
     "type": "base",
     "system": false,
     "schema": [
@@ -85,8 +85,8 @@
     "options": {}
   },
   {
-    "id": "system_users",
-    "name": "system_users",
+    "id": "app_users",
+    "name": "app_users",
     "type": "auth",
     "system": false,
     "schema": [
@@ -142,7 +142,7 @@
         "presentable": false,
         "unique": false,
         "options": {
-          "collectionId": "member_associations",
+          "collectionId": "organizations",
           "cascadeDelete": false,
           "minSelect": null,
           "maxSelect": 1,
@@ -172,8 +172,8 @@
     }
   },
   {
-    "id": "association_members",
-    "name": "association_members",
+    "id": "org_members",
+    "name": "org_members",
     "type": "base",
     "system": false,
     "schema": [
@@ -186,7 +186,7 @@
         "presentable": false,
         "unique": true,
         "options": {
-          "collectionId": "system_users",
+          "collectionId": "app_users",
           "cascadeDelete": true,
           "minSelect": null,
           "maxSelect": 1,
@@ -202,7 +202,7 @@
         "presentable": false,
         "unique": false,
         "options": {
-          "collectionId": "member_associations",
+          "collectionId": "organizations",
           "cascadeDelete": false,
           "minSelect": null,
           "maxSelect": 1,
@@ -376,8 +376,8 @@
     "options": {}
   },
   {
-    "id": "member_dues",
-    "name": "member_dues",
+    "id": "org_dues",
+    "name": "org_dues",
     "type": "base",
     "system": false,
     "schema": [
@@ -390,7 +390,7 @@
         "presentable": false,
         "unique": false,
         "options": {
-          "collectionId": "association_members",
+          "collectionId": "org_members",
           "cascadeDelete": true,
           "minSelect": null,
           "maxSelect": 1,
@@ -406,7 +406,7 @@
         "presentable": false,
         "unique": false,
         "options": {
-          "collectionId": "member_associations",
+          "collectionId": "organizations",
           "cascadeDelete": false,
           "minSelect": null,
           "maxSelect": 1,
@@ -535,8 +535,8 @@
     "options": {}
   },
   {
-    "id": "member_announcements",
-    "name": "member_announcements",
+    "id": "org_announcements",
+    "name": "org_announcements",
     "type": "base",
     "system": false,
     "schema": [
@@ -549,7 +549,7 @@
         "presentable": false,
         "unique": false,
         "options": {
-          "collectionId": "member_associations",
+          "collectionId": "organizations",
           "cascadeDelete": false,
           "minSelect": null,
           "maxSelect": 1,
@@ -663,8 +663,8 @@
     "options": {}
   },
   {
-    "id": "member_mailing_lists",
-    "name": "member_mailing_lists",
+    "id": "org_mailing_lists",
+    "name": "org_mailing_lists",
     "type": "base",
     "system": false,
     "schema": [
@@ -677,7 +677,7 @@
         "presentable": false,
         "unique": false,
         "options": {
-          "collectionId": "member_associations",
+          "collectionId": "organizations",
           "cascadeDelete": false,
           "minSelect": null,
           "maxSelect": 1,
@@ -775,8 +775,8 @@
     "options": {}
   },
   {
-    "id": "member_list_subscriptions",
-    "name": "member_list_subscriptions",
+    "id": "org_list_subscriptions",
+    "name": "org_list_subscriptions",
     "type": "base",
     "system": false,
     "schema": [
@@ -789,7 +789,7 @@
         "presentable": false,
         "unique": false,
         "options": {
-          "collectionId": "association_members",
+          "collectionId": "org_members",
           "cascadeDelete": true,
           "minSelect": null,
           "maxSelect": 1,
@@ -805,7 +805,7 @@
         "presentable": false,
         "unique": false,
         "options": {
-          "collectionId": "member_mailing_lists",
+          "collectionId": "org_mailing_lists",
           "cascadeDelete": true,
           "minSelect": null,
           "maxSelect": 1,
