@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const compression = require('compression');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const logger = require('./utils/logger');
@@ -85,16 +86,22 @@ app.use('/api/mailing-lists', mailingListRoutes);
 app.use('/api/email', emailRoutes);
 app.use('/api/upload', uploadRoutes);
 
-// Serve frontend for main domain
+// Frontend serving with proper error handling
 app.get('/', (req, res) => {
-    const indexPath = path.join(__dirname, 'frontend/index.html');
-    if (require('fs').existsSync(indexPath)) {
+    const indexPath = path.join(__dirname, 'frontend', 'index.html');
+    
+    // Check if file exists
+    if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
     } else {
+        logger.error('Frontend index.html not found at:', indexPath);
         res.status(500).json({ 
             error: 'Frontend files not found',
             path: indexPath,
-            exists: require('fs').existsSync(indexPath)
+            exists: false,
+            directory_contents: fs.existsSync(path.join(__dirname, 'frontend')) 
+                ? fs.readdirSync(path.join(__dirname, 'frontend'))
+                : 'frontend directory does not exist'
         });
     }
 });
@@ -103,23 +110,23 @@ app.get('/', (req, res) => {
 app.get('/admin*', (req, res) => {
     // Check if this is the admin domain
     if (req.get('host') === process.env.ADMIN_DOMAIN) {
-        const adminPath = path.join(__dirname, 'frontend/admin.html');
-        if (require('fs').existsSync(adminPath)) {
+        const adminPath = path.join(__dirname, 'frontend', 'admin.html');
+        const indexPath = path.join(__dirname, 'frontend', 'index.html');
+        
+        if (fs.existsSync(adminPath)) {
             res.sendFile(adminPath);
-        } else {
+        } else if (fs.existsSync(indexPath)) {
             // Fallback to index.html if admin.html doesn't exist
-            const indexPath = path.join(__dirname, 'frontend/index.html');
-            if (require('fs').existsSync(indexPath)) {
-                res.sendFile(indexPath);
-            } else {
-                res.status(500).json({ 
-                    error: 'Admin frontend files not found',
-                    adminPath,
-                    indexPath,
-                    adminExists: require('fs').existsSync(adminPath),
-                    indexExists: require('fs').existsSync(indexPath)
-                });
-            }
+            res.sendFile(indexPath);
+        } else {
+            logger.error('Admin frontend files not found');
+            res.status(500).json({ 
+                error: 'Admin frontend files not found',
+                adminPath,
+                indexPath,
+                adminExists: false,
+                indexExists: false
+            });
         }
     } else {
         // Redirect to admin domain
@@ -127,37 +134,18 @@ app.get('/admin*', (req, res) => {
     }
 });
 
-// Handle admin domain root
-app.get('/', (req, res) => {
-    if (req.get('host') === process.env.ADMIN_DOMAIN) {
-        // Admin domain root - redirect to admin interface
-        res.redirect('/admin');
-        return;
-    }
-    
-    // Main domain - serve main interface
-    const indexPath = path.join(__dirname, 'frontend/index.html');
-    if (require('fs').existsSync(indexPath)) {
-        res.sendFile(indexPath);
-    } else {
-        res.status(500).json({ 
-            error: 'Frontend files not found',
-            path: indexPath,
-            exists: require('fs').existsSync(indexPath)
-        });
-    }
-});
-
 // Catch-all handler for SPA routing
 app.get('*', (req, res) => {
-    const indexPath = path.join(__dirname, 'frontend/index.html');
-    if (require('fs').existsSync(indexPath)) {
+    const indexPath = path.join(__dirname, 'frontend', 'index.html');
+    
+    if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
     } else {
+        logger.error('Frontend files not found for catch-all route');
         res.status(404).json({ 
             error: 'Frontend files not found',
             path: indexPath,
-            exists: require('fs').existsSync(indexPath),
+            exists: false,
             requestedUrl: req.url
         });
     }
