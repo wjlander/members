@@ -578,28 +578,6 @@ EOF
         warn "Admin domain $ADMIN_DOMAIN: $ADMIN_DOMAIN_IP (should be $PUBLIC_IP)"
         warn "SSL certificate setup skipped. Please configure DNS and run:"
         warn "certbot --nginx -d $MAIN_DOMAIN -d $ADMIN_DOMAIN"
-    # Enable the site
-    systemctl enable fail2ban
-EOF
-
-    # Create custom filter for member management
-    # Create custom filter for member management
-    cat > "/etc/fail2ban/filter.d/member-management.conf" << EOF
-[Definition]
-failregex = ^.*Authentication failed for.*<HOST>.*$
-            ^.*Invalid login attempt from.*<HOST>.*$
-            ^.*Suspicious activity from.*<HOST>.*$
-ignoreregex =
-EOF
-
-    # Add member-management jail to jail.local
-    cat >> "/etc/fail2ban/jail.local" << EOF
-
-[nginx-noscript]
-enabled = true
-filter = nginx-noscript
-logpath = /var/log/nginx/access.log
-maxretry = 6
 
 [member-management]
 enabled = true
@@ -609,7 +587,17 @@ maxretry = 5
 bantime = 1800
 EOF
 
+    # Create custom filter for member management
+    cat > "/etc/fail2ban/filter.d/member-management.conf" << EOF
+[Definition]
+failregex = ^.*Authentication failed for.*<HOST>.*$
+            ^.*Invalid login attempt from.*<HOST>.*$
+            ^.*Suspicious activity from.*<HOST>.*$
+ignoreregex =
+EOF
+
     systemctl restart fail2ban
+    systemctl enable fail2ban
 }
 
 # Create backup script
