@@ -49,6 +49,42 @@ generate_password() {
     openssl rand -base64 32 | tr -d "=+/" | cut -c1-25
 }
 
+# Remove existing PocketBase installation
+remove_existing_installation() {
+    log "Checking for existing PocketBase installation..."
+    
+    # Run complete PocketBase removal
+    if [[ -f "scripts/remove-pocketbase.sh" ]]; then
+        log "Running complete PocketBase removal..."
+        bash scripts/remove-pocketbase.sh
+    else
+        warn "PocketBase removal script not found, performing basic cleanup..."
+        
+        # Stop services if running
+        if systemctl is-active --quiet pocketbase; then
+            warn "Stopping existing PocketBase service..."
+            systemctl stop pocketbase
+            systemctl disable pocketbase
+        fi
+        
+        # Remove service file
+        if [[ -f "/etc/systemd/system/pocketbase.service" ]]; then
+            rm -f /etc/systemd/system/pocketbase.service
+            systemctl daemon-reload
+        fi
+        
+        # Remove PocketBase binary if exists
+        if [[ -f "$APP_DIR/pocketbase" ]]; then
+            rm -f "$APP_DIR/pocketbase"
+        fi
+        
+        # Remove PocketBase user
+        if id "pocketbase" &>/dev/null; then
+            userdel -r pocketbase 2>/dev/null || true
+        fi
+    fi
+}
+
 # Get configuration from user
 get_configuration() {
     echo -e "${BLUE}=== Member Management System Configuration ===${NC}"
