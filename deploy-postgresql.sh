@@ -579,6 +579,13 @@ EOF
         warn "SSL certificate setup skipped. Please configure DNS and run:"
         warn "certbot --nginx -d $MAIN_DOMAIN -d $ADMIN_DOMAIN"
 
+    cat > "/etc/fail2ban/jail.local" << 'EOF'
+enabled = true
+filter = member-management
+logpath = /var/log/member-management/app.log
+maxretry = 5
+bantime = 1800
+
 [member-management]
 enabled = true
 filter = member-management
@@ -588,7 +595,7 @@ bantime = 1800
 EOF
 
     # Create custom filter for member management
-    cat > "/etc/fail2ban/filter.d/member-management.conf" << EOF
+    cat > "/etc/fail2ban/filter.d/member-management.conf" << 'EOF'
 [Definition]
 failregex = ^.*Authentication failed for.*<HOST>.*$
             ^.*Invalid login attempt from.*<HOST>.*$
