@@ -156,7 +156,8 @@ install_dependencies() {
         git \
         build-essential \
         python3-pip \
-        python3-venv
+        python3-venv \
+        dnsutils
     
     # Install Node.js and npm separately to avoid conflicts
     install_nodejs
@@ -586,16 +587,29 @@ setup_ssl() {
     
     # Test if domain points to this server
     PUBLIC_IP=$(curl -s ipecho.net/plain || curl -s icanhazip.com)
-    MAIN_DOMAIN_IP=$(dig +short "$MAIN_DOMAIN" | head -n1)
-    ADMIN_DOMAIN_IP=$(dig +short "$ADMIN_DOMAIN" | head -n1)
     
-    if [[ "$PUBLIC_IP" != "$MAIN_DOMAIN_IP" ]] || [[ "$PUBLIC_IP" != "$ADMIN_DOMAIN_IP" ]]; then
+    # Get domain IPs with fallback methods
+    if command -v dig >/dev/null 2>&1; then
+        MAIN_DOMAIN_IP=$(dig +short "$MAIN_DOMAIN" | head -n1)
+        ADMIN_DOMAIN_IP=$(dig +short "$ADMIN_DOMAIN" | head -n1)
+    elif command -v nslookup >/dev/null 2>&1; then
+        MAIN_DOMAIN_IP=$(nslookup "$MAIN_DOMAIN" | grep -A1 "Name:" | tail -1 | awk '{print $2}')
+        ADMIN_DOMAIN_IP=$(nslookup "$ADMIN_DOMAIN" | grep -A1 "Name:" | tail -1 | awk '{print $2}')
+    else
+        warn "No DNS lookup tools available, skipping DNS verification"
+        MAIN_DOMAIN_IP=""
+        ADMIN_DOMAIN_IP=""
+    fi
+    
+    if [[ -n "$MAIN_DOMAIN_IP" && -n "$ADMIN_DOMAIN_IP" ]] && [[ "$PUBLIC_IP" != "$MAIN_DOMAIN_IP" ]] || [[ "$PUBLIC_IP" != "$ADMIN_DOMAIN_IP" ]]; then
         warn "One or both domains do not point to this server"
         warn "Main domain $MAIN_DOMAIN: $MAIN_DOMAIN_IP (should be $PUBLIC_IP)"
         warn "Admin domain $ADMIN_DOMAIN: $ADMIN_DOMAIN_IP (should be $PUBLIC_IP)"
         warn "SSL certificate setup skipped. Please configure DNS and run:"
         warn "certbot --nginx -d $MAIN_DOMAIN -d $ADMIN_DOMAIN"
         return
+    elif [[ -z "$MAIN_DOMAIN_IP" || -z "$ADMIN_DOMAIN_IP" ]]; then
+        warn "Could not resolve domain IPs, attempting SSL setup anyway..."
     fi
     
     # Setup SSL for both domains
