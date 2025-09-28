@@ -520,9 +520,9 @@ initialize_pocketbase() {
     
     # Test PocketBase serve command manually first
     log "Testing PocketBase serve command..."
-    timeout 10s sudo -u "$APP_USER" "$APP_DIR/pocketbase" serve --http=127.0.0.1:8080 --dir="$DATA_DIR" || {
+    timeout 10s sudo -u "$APP_USER" "$APP_DIR/pocketbase" serve --http=127.0.0.1:8090 --dir="$DATA_DIR" || {
         log "PocketBase serve test failed. Checking detailed error..."
-        sudo -u "$APP_USER" "$APP_DIR/pocketbase" serve --http=127.0.0.1:8080 --dir="$DATA_DIR" 2>&1 | head -20
+        sudo -u "$APP_USER" "$APP_DIR/pocketbase" serve --http=127.0.0.1:8090 --dir="$DATA_DIR" 2>&1 | head -20
         error "PocketBase serve command failed"
     }
     
@@ -554,7 +554,7 @@ initialize_pocketbase() {
     
     # Test if PocketBase is responding
     for i in {1..10}; do
-        if curl -s http://127.0.0.1:8080/api/health >/dev/null 2>&1; then
+        if curl -s http://127.0.0.1:8090/api/health >/dev/null 2>&1; then
             log "PocketBase is responding to API requests"
             break
         fi
@@ -563,7 +563,7 @@ initialize_pocketbase() {
     done
     
     log "PocketBase started successfully"
-    log "Local admin panel available at: http://127.0.0.1:8080/_/"
+    log "Local admin panel available at: http://127.0.0.1:8090/_/"
 }
 
 # Create initial configuration file
