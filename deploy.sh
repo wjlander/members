@@ -216,7 +216,7 @@ Wants=network.target
 Type=simple
 User=$APP_USER
 Group=$APP_USER
-ExecStart=$APP_DIR/pocketbase serve --http=127.0.0.1:8080 --dir=$DATA_DIR
+ExecStart=$APP_DIR/pocketbase serve --http=127.0.0.1:8090 --dir=$DATA_DIR
 Restart=always
 RestartSec=5
 StandardOutput=journal
@@ -273,7 +273,7 @@ server {
     client_max_body_size 100M;
     
     location / {
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass http://127.0.0.1:8090;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -288,7 +288,7 @@ server {
     
     # Serve static files from PocketBase
     location /api/files/ {
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass http://127.0.0.1:8090;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -297,7 +297,7 @@ server {
     
     # API access
     location /api/ {
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass http://127.0.0.1:8090;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -323,7 +323,7 @@ server {
     
     # Admin panel access
     location /_/ {
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass http://127.0.0.1:8090;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -338,7 +338,7 @@ server {
     
     # API access for admin
     location /api/ {
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass http://127.0.0.1:8090;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -352,7 +352,7 @@ server {
     
     # Serve static files for admin
     location /api/files/ {
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass http://127.0.0.1:8090;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
