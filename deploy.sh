@@ -219,8 +219,8 @@ Group=$APP_USER
 ExecStart=$APP_DIR/pocketbase serve --http=127.0.0.1:8080 --dir=$DATA_DIR
 Restart=always
 RestartSec=5
-StandardOutput=append:/var/log/pocketbase/pocketbase.log
-StandardError=append:/var/log/pocketbase/pocketbase-error.log
+StandardOutput=journal
+StandardError=journal
 
 # Security settings
 NoNewPrivileges=true
@@ -518,6 +518,14 @@ initialize_pocketbase() {
         error "Cannot execute PocketBase as user $APP_USER"
     fi
     
+    # Test PocketBase serve command manually first
+    log "Testing PocketBase serve command..."
+    timeout 10s sudo -u "$APP_USER" "$APP_DIR/pocketbase" serve --http=127.0.0.1:8080 --dir="$DATA_DIR" || {
+        log "PocketBase serve test failed. Checking detailed error..."
+        sudo -u "$APP_USER" "$APP_DIR/pocketbase" serve --http=127.0.0.1:8080 --dir="$DATA_DIR" 2>&1 | head -20
+        error "PocketBase serve command failed"
+    }
+    
     # Ensure PocketBase service is enabled and started
     systemctl enable pocketbase
     systemctl start pocketbase
@@ -532,13 +540,13 @@ initialize_pocketbase() {
         fi
         log "Waiting for PocketBase to start (attempt $i/5)..."
         # Show recent logs for debugging
-        journalctl -u pocketbase --no-pager -l -n 5
+        journalctl -u pocketbase --no-pager -l -n 10
         sleep 5
     done
     
     # Check if PocketBase is running
     if ! systemctl is-active --quiet pocketbase; then
-        error_log=$(journalctl -u pocketbase --no-pager -l -n 10)
+        error_log=$(journalctl -u pocketbase --no-pager -l -n 20)
         log "Recent PocketBase logs:"
         echo "$error_log"
         error "PocketBase failed to start. Check logs: journalctl -u pocketbase"
