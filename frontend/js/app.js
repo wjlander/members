@@ -476,6 +476,15 @@ function app() {
         editMember(member) {
             // Implement member edit functionality
             console.log('Edit member:', member);
+        // Mailing list actions (Admin)
+        editMailingList(mailingList) {
+            // Implement mailing list edit functionality
+            console.log('Edit mailing list:', mailingList);
+        },
+        },
+        viewSubscribers(mailingList) {
+            // Implement subscriber view functionality
+            console.log('View subscribers for:', mailingList);
         }
     };
 }
