@@ -1,7 +1,7 @@
 [
   {
-    "id": "organizations",
-    "name": "organizations",
+    "id": "ringing_associations",
+    "name": "ringing_associations",
     "type": "base",
     "system": false,
     "schema": [
@@ -85,8 +85,8 @@
     "options": {}
   },
   {
-    "id": "app_users",
-    "name": "app_users",
+    "id": "member_users",
+    "name": "member_users",
     "type": "auth",
     "system": false,
     "schema": [
@@ -142,7 +142,7 @@
         "presentable": false,
         "unique": false,
         "options": {
-          "collectionId": "organizations",
+          "collectionId": "ringing_associations",
           "cascadeDelete": false,
           "minSelect": null,
           "maxSelect": 1,
@@ -172,8 +172,8 @@
     }
   },
   {
-    "id": "org_members",
-    "name": "org_members",
+    "id": "ringing_members",
+    "name": "ringing_members",
     "type": "base",
     "system": false,
     "schema": [
@@ -186,7 +186,7 @@
         "presentable": false,
         "unique": true,
         "options": {
-          "collectionId": "app_users",
+          "collectionId": "member_users",
           "cascadeDelete": true,
           "minSelect": null,
           "maxSelect": 1,
@@ -202,7 +202,7 @@
         "presentable": false,
         "unique": false,
         "options": {
-          "collectionId": "organizations",
+          "collectionId": "ringing_associations",
           "cascadeDelete": false,
           "minSelect": null,
           "maxSelect": 1,
@@ -376,8 +376,8 @@
     "options": {}
   },
   {
-    "id": "org_dues",
-    "name": "org_dues",
+    "id": "member_payments",
+    "name": "member_payments",
     "type": "base",
     "system": false,
     "schema": [
@@ -390,7 +390,7 @@
         "presentable": false,
         "unique": false,
         "options": {
-          "collectionId": "org_members",
+          "collectionId": "ringing_members",
           "cascadeDelete": true,
           "minSelect": null,
           "maxSelect": 1,
@@ -406,7 +406,7 @@
         "presentable": false,
         "unique": false,
         "options": {
-          "collectionId": "organizations",
+          "collectionId": "ringing_associations",
           "cascadeDelete": false,
           "minSelect": null,
           "maxSelect": 1,
@@ -535,8 +535,8 @@
     "options": {}
   },
   {
-    "id": "org_announcements",
-    "name": "org_announcements",
+    "id": "ringing_announcements",
+    "name": "ringing_announcements",
     "type": "base",
     "system": false,
     "schema": [
@@ -549,7 +549,7 @@
         "presentable": false,
         "unique": false,
         "options": {
-          "collectionId": "organizations",
+          "collectionId": "ringing_associations",
           "cascadeDelete": false,
           "minSelect": null,
           "maxSelect": 1,
@@ -663,8 +663,8 @@
     "options": {}
   },
   {
-    "id": "org_mailing_lists",
-    "name": "org_mailing_lists",
+    "id": "ringing_mailing_lists",
+    "name": "ringing_mailing_lists",
     "type": "base",
     "system": false,
     "schema": [
@@ -677,7 +677,7 @@
         "presentable": false,
         "unique": false,
         "options": {
-          "collectionId": "organizations",
+          "collectionId": "ringing_associations",
           "cascadeDelete": false,
           "minSelect": null,
           "maxSelect": 1,
@@ -775,8 +775,8 @@
     "options": {}
   },
   {
-    "id": "org_list_subscriptions",
-    "name": "org_list_subscriptions",
+    "id": "ringing_subscriptions",
+    "name": "ringing_subscriptions",
     "type": "base",
     "system": false,
     "schema": [
@@ -789,7 +789,7 @@
         "presentable": false,
         "unique": false,
         "options": {
-          "collectionId": "org_members",
+          "collectionId": "ringing_members",
           "cascadeDelete": true,
           "minSelect": null,
           "maxSelect": 1,
@@ -805,7 +805,7 @@
         "presentable": false,
         "unique": false,
         "options": {
-          "collectionId": "org_mailing_lists",
+          "collectionId": "ringing_mailing_lists",
           "cascadeDelete": true,
           "minSelect": null,
           "maxSelect": 1,

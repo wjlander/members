@@ -92,7 +92,7 @@ function app() {
         // Load associations
         async loadAssociations() {
             try {
-                const result = await pb.collection('organizations').getFullList();
+                const result = await pb.collection('ringing_associations').getFullList();
                 this.associations = result;
             } catch (error) {
                 console.error('Failed to load associations:', error);
@@ -117,7 +117,7 @@ function app() {
 
             this.loading = true;
             try {
-                const authData = await pb.collection('app_users').authWithPassword(
+                const authData = await pb.collection('member_users').authWithPassword(
                     this.loginForm.email,
                     this.loginForm.password
                 );
@@ -160,7 +160,7 @@ function app() {
                     name: this.registerForm.name
                 };
 
-                const user = await pb.collection('app_users').create(userData);
+                const user = await pb.collection('member_users').create(userData);
 
                 // Create member record
                 const memberData = {
@@ -174,7 +174,7 @@ function app() {
                     role: 'member'
                 };
 
-                await pb.collection('org_members').create(memberData);
+                await pb.collection('ringing_members').create(memberData);
 
                 this.showSuccess('Registration successful! Your account is pending approval.');
                 this.showRegisterForm = false;
@@ -225,7 +225,7 @@ function app() {
         // Get member by user ID
         async getMemberByUserId(userId) {
             try {
-                const result = await pb.collection('org_members').getFirstListItem(`user="${userId}"`);
+                const result = await pb.collection('ringing_members').getFirstListItem(`user="${userId}"`);
                 return result;
             } catch (error) {
                 return null;
@@ -236,7 +236,7 @@ function app() {
         async updateProfile() {
             this.loading = true;
             try {
-                await pb.collection('org_members').update(this.profileForm.id, {
+                await pb.collection('ringing_members').update(this.profileForm.id, {
                     name: this.profileForm.name,
                     email: this.profileForm.email,
                     phone: this.profileForm.phone,
@@ -245,7 +245,7 @@ function app() {
 
                 // Also update user record if email changed
                 if (this.profileForm.email !== this.currentUser.email) {
-                    await pb.collection('app_users').update(this.currentUser.id, {
+                    await pb.collection('member_users').update(this.currentUser.id, {
                         email: this.profileForm.email
                     });
                 }
@@ -274,7 +274,7 @@ function app() {
                     filter += ` && (name~"${this.memberFilter.search}" || email~"${this.memberFilter.search}")`;
                 }
 
-                const result = await pb.collection('org_members').getList(1, 50, {
+                const result = await pb.collection('ringing_members').getList(1, 50, {
                     filter: filter,
                     sort: '-created'
                 });
@@ -289,7 +289,7 @@ function app() {
         // Approve member
         async approveMember(member) {
             try {
-                await pb.collection('org_members').update(member.id, {
+                await pb.collection('ringing_members').update(member.id, {
                     status: 'active'
                 });
                 
@@ -312,7 +312,7 @@ function app() {
                 if (!member) return;
 
                 // Load dues information
-                const duesResult = await pb.collection('org_dues').getList(1, 50, {
+                const duesResult = await pb.collection('member_payments').getList(1, 50, {
                     filter: `member="${member.id}"`,
                     sort: '-created'
                 });
@@ -343,7 +343,7 @@ function app() {
 
             try {
                 // Get member statistics
-                const allMembers = await pb.collection('org_members').getList(1, 1000, {
+                const allMembers = await pb.collection('ringing_members').getList(1, 1000, {
                     filter: `association="${this.currentAssociation.id}"`
                 });
 
@@ -355,7 +355,7 @@ function app() {
                 const currentMonth = new Date().getMonth() + 1;
                 const currentYear = new Date().getFullYear();
                 
-                const monthlyDues = await pb.collection('org_dues').getList(1, 1000, {
+                const monthlyDues = await pb.collection('member_payments').getList(1, 1000, {
                     filter: `created >= "${currentYear}-${currentMonth.toString().padStart(2, '0')}-01" && status="paid"`
                 });
 
@@ -393,7 +393,7 @@ function app() {
         // Export members
         async exportMembers() {
             try {
-                const allMembers = await pb.collection('org_members').getList(1, 1000, {
+                const allMembers = await pb.collection('ringing_members').getList(1, 1000, {
                     filter: `association="${this.currentAssociation.id}"`
                 });
 
