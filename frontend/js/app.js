@@ -160,7 +160,6 @@ function app() {
                     name: this.registerForm.name
                 };
 
-                const user = await pb.collection('users').create(userData);
                 const user = await pb.collection('app_users').create(userData);
 
                 // Create member record
@@ -175,7 +174,6 @@ function app() {
                     role: 'member'
                 };
 
-                await pb.collection('members').create(memberData);
                 await pb.collection('org_members').create(memberData);
 
                 this.showSuccess('Registration successful! Your account is pending approval.');
@@ -357,7 +355,6 @@ function app() {
                 const currentMonth = new Date().getMonth() + 1;
                 const currentYear = new Date().getFullYear();
                 
-                const monthlyDues = await pb.collection('dues').getList(1, 1000, {
                 const monthlyDues = await pb.collection('org_dues').getList(1, 1000, {
                     filter: `created >= "${currentYear}-${currentMonth.toString().padStart(2, '0')}-01" && status="paid"`
                 });
@@ -479,12 +476,14 @@ function app() {
         editMember(member) {
             // Implement member edit functionality
             console.log('Edit member:', member);
+        },
+
         // Mailing list actions (Admin)
         editMailingList(mailingList) {
             // Implement mailing list edit functionality
             console.log('Edit mailing list:', mailingList);
         },
-        },
+
         viewSubscribers(mailingList) {
             // Implement subscriber view functionality
             console.log('View subscribers for:', mailingList);
