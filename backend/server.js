@@ -91,6 +91,24 @@ app.get('/', (req, res) => {
 
 // Admin interface
 app.get('/admin*', (req, res) => {
+    // Check if this is the admin domain
+    if (req.get('host') === process.env.ADMIN_DOMAIN) {
+        res.sendFile(path.join(__dirname, '../frontend/admin.html'));
+    } else {
+        // Redirect to admin domain
+        res.redirect(`https://${process.env.ADMIN_DOMAIN}/admin`);
+    }
+});
+
+// Handle admin domain root
+app.get('/', (req, res) => {
+    if (req.get('host') === process.env.ADMIN_DOMAIN) {
+        // Admin domain root - redirect to admin interface
+        res.redirect('/admin');
+        return;
+    }
+    
+    // Main domain - serve main interface
     res.sendFile(path.join(__dirname, '../frontend/admin.html'));
 });
 
