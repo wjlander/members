@@ -668,7 +668,7 @@ main() {
     echo "2. Run SSL setup: sudo certbot --nginx -d $MAIN_DOMAIN -d $ADMIN_DOMAIN"
     echo "3. Access the main system: https://$MAIN_DOMAIN/"
     echo "4. Access the admin panel: https://$ADMIN_DOMAIN/_/"
-    echo "   (or temporarily: http://$(curl -s ipecho.net/plain):8080/_/)"
+    echo "   (or temporarily: http://$(curl -s ipecho.net/plain):8090/_/)"
     echo "3. Create your first admin user"
     echo "4. Import the database schema"
     echo "5. Configure your associations"
