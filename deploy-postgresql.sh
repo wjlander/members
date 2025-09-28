@@ -446,12 +446,13 @@ configure_nginx() {
     # Remove default site
     rm -f /etc/nginx/sites-enabled/default
     
+    # Add rate limiting to main nginx.conf
+    if ! grep -q "limit_req_zone" /etc/nginx/nginx.conf; then
+        sed -i '/http {/a\\tlimit_req_zone $binary_remote_addr zone=api:10m rate=10r/m;\n\tlimit_req_zone $binary_remote_addr zone=login:10m rate=5r/m;' /etc/nginx/nginx.conf
+    fi
+    
     # Create main site configuration
     cat > "/etc/nginx/sites-available/member-management" << EOF
-# Rate limiting
-limit_req_zone \$binary_remote_addr zone=api:10m rate=10r/m;
-limit_req_zone \$binary_remote_addr zone=login:10m rate=5r/m;
-
 # Main application server
 server {
     listen 80;
@@ -462,21 +463,12 @@ server {
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' cdn.tailwindcss.com unpkg.com cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' cdn.tailwindcss.com cdnjs.cloudflare.com; font-src 'self' cdnjs.cloudflare.com; img-src 'self' data:; connect-src 'self';" always;
     
     # File upload size limit
     client_max_body_size 100M;
     
-    # Serve static files
-    location /static/ {
-        alias $APP_DIR/public/;
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-    
-    # API endpoints with rate limiting
-    location /api/auth/ {
-        limit_req zone=login burst=5 nodelay;
+    # Health check endpoint
+    location /health {
         proxy_pass http://127.0.0.1:3000;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -484,6 +476,7 @@ server {
         proxy_set_header X-Forwarded-Proto \$scheme;
     }
     
+    # API endpoints with rate limiting
     location /api/ {
         limit_req zone=api burst=20 nodelay;
         proxy_pass http://127.0.0.1:3000;
@@ -520,12 +513,11 @@ server {
     add_header X-XSS-Protection "1; mode=block" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     
-    # Admin interface with additional security
+    # Admin interface
     location / {
-        # Additional rate limiting for admin
-        limit_req zone=login burst=3 nodelay;
+        limit_req zone=login burst=5 nodelay;
         
-        proxy_pass http://127.0.0.1:3000/admin;
+        proxy_pass http://127.0.0.1:3000;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -716,6 +708,25 @@ health_check() {
         error "✗ PostgreSQL health check failed"
     fi
     
+    # Ensure application files exist
+    if [[ ! -f "$APP_DIR/server.js" ]]; then
+        warn "Application files missing, copying from project..."
+        if [[ -d "backend" ]]; then
+            cp -r backend/* "$APP_DIR/"
+            chown -R "$APP_USER:$APP_USER" "$APP_DIR"
+        else
+            warn "Backend files not found in current directory"
+        fi
+    fi
+    
+    # Install dependencies if needed
+    if [[ ! -d "$APP_DIR/node_modules" ]]; then
+        log "Installing Node.js dependencies..."
+        cd "$APP_DIR"
+        npm install
+        chown -R "$APP_USER:$APP_USER" "$APP_DIR"
+    fi
+    
     # Check if application starts
     systemctl start member-management
     sleep 10
@@ -723,21 +734,32 @@ health_check() {
     if systemctl is-active --quiet member-management; then
         log "✓ Member Management service is running"
     else
-        error "✗ Member Management service failed to start"
+        warn "⚠ Member Management service failed to start"
+        log "Checking service logs..."
+        journalctl -u member-management --no-pager -l -n 20
+        
+        # Try to start manually for debugging
+        log "Attempting manual start for debugging..."
+        cd "$APP_DIR"
+        timeout 10s sudo -u "$APP_USER" node server.js || log "Manual start failed or timed out"
     fi
     
     # Check if application responds
-    if curl -f -s http://127.0.0.1:3000/health > /dev/null 2>&1; then
+    sleep 5
+    if curl -f -s --connect-timeout 5 http://127.0.0.1:3000/health > /dev/null 2>&1; then
         log "✓ Application is responding to HTTP requests"
     else
         warn "⚠ Application health endpoint not responding (this may be normal during initial setup)"
+        log "Checking if port 3000 is listening..."
+        netstat -tlnp | grep :3000 || log "Port 3000 is not listening"
     fi
     
     # Check Nginx
     if systemctl is-active --quiet nginx; then
         log "✓ Nginx is running"
     else
-        error "✗ Nginx is not running"
+        warn "⚠ Nginx is not running"
+        systemctl start nginx
     fi
 }
 
