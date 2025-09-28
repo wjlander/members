@@ -1,624 +1,666 @@
-{
-  "version": "1.0.0",
-  "collections": [
-    {
-      "id": "associations",
-      "name": "associations",
-      "type": "base",
-      "system": false,
-      "schema": [
-        {
-          "id": "name",
-          "name": "name",
-          "type": "text",
-          "system": false,
-          "required": true,
-          "unique": false,
-          "options": {
-            "min": 1,
-            "max": 255,
-            "pattern": ""
-          }
-        },
-        {
-          "id": "code",
-          "name": "code",
-          "type": "text",
-          "system": false,
-          "required": true,
-          "unique": true,
-          "options": {
-            "min": 2,
-            "max": 10,
-            "pattern": "^[A-Z0-9]+$"
-          }
-        },
-        {
-          "id": "description",
-          "name": "description",
-          "type": "text",
-          "system": false,
-          "required": false,
-          "unique": false,
-          "options": {
-            "min": 0,
-            "max": 1000,
-            "pattern": ""
-          }
-        },
-        {
-          "id": "settings",
-          "name": "settings",
-          "type": "json",
-          "system": false,
-          "required": false,
-          "unique": false,
-          "options": {}
-        },
-        {
-          "id": "status",
-          "name": "status",
-          "type": "select",
-          "system": false,
-          "required": true,
-          "unique": false,
-          "options": {
-            "maxSelect": 1,
-            "values": ["active", "inactive"]
-          }
+[
+  {
+    "id": "associations",
+    "name": "associations",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "id": "name",
+        "name": "name",
+        "type": "text",
+        "system": false,
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": 1,
+          "max": 255,
+          "pattern": ""
         }
-      ],
-      "indexes": [
-        "CREATE UNIQUE INDEX `idx_associations_code` ON `associations` (`code`)",
-        "CREATE INDEX `idx_associations_status` ON `associations` (`status`)"
-      ],
-      "listRule": "@request.auth.id != ''",
-      "viewRule": "@request.auth.id != ''",
-      "createRule": "@request.auth.role = 'super_admin'",
-      "updateRule": "@request.auth.role = 'super_admin' || (@request.auth.role = 'admin' && @request.auth.association = id)",
-      "deleteRule": "@request.auth.role = 'super_admin'",
-      "options": {}
-    },
-    {
-      "id": "users",
-      "name": "users",
-      "type": "auth",
-      "system": false,
-      "schema": [
-        {
-          "id": "name",
-          "name": "name",
-          "type": "text",
-          "system": false,
-          "required": true,
-          "unique": false,
-          "options": {
-            "min": 1,
-            "max": 255,
-            "pattern": ""
-          }
-        },
-        {
-          "id": "avatar",
-          "name": "avatar",
-          "type": "file",
-          "system": false,
-          "required": false,
-          "unique": false,
-          "options": {
-            "maxSelect": 1,
-            "maxSize": 5242880,
-            "mimeTypes": ["image/jpeg", "image/png", "image/svg+xml", "image/gif", "image/webp"],
-            "thumbs": ["100x100"]
-          }
-        },
-        {
-          "id": "role",
-          "name": "role",
-          "type": "select",
-          "system": false,
-          "required": true,
-          "unique": false,
-          "options": {
-            "maxSelect": 1,
-            "values": ["super_admin", "admin", "member"]
-          }
-        },
-        {
-          "id": "association",
-          "name": "association",
-          "type": "relation",
-          "system": false,
-          "required": false,
-          "unique": false,
-          "options": {
-            "collectionId": "associations",
-            "cascadeDelete": false,
-            "minSelect": 0,
-            "maxSelect": 1,
-            "displayFields": ["name"]
-          }
+      },
+      {
+        "id": "code",
+        "name": "code",
+        "type": "text",
+        "system": false,
+        "required": true,
+        "presentable": false,
+        "unique": true,
+        "options": {
+          "min": 2,
+          "max": 10,
+          "pattern": "^[A-Z0-9]+$"
         }
-      ],
-      "indexes": [
-        "CREATE INDEX `idx_users_association` ON `users` (`association`)",
-        "CREATE INDEX `idx_users_role` ON `users` (`role`)"
-      ],
-      "listRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || @request.auth.association = association)",
-      "viewRule": "@request.auth.id != '' && (@request.auth.id = id || @request.auth.role = 'super_admin' || (@request.auth.role = 'admin' && @request.auth.association = association))",
-      "createRule": "",
-      "updateRule": "@request.auth.id = id || @request.auth.role = 'super_admin' || (@request.auth.role = 'admin' && @request.auth.association = association)",
-      "deleteRule": "@request.auth.id = id || @request.auth.role = 'super_admin'",
-      "options": {
-        "allowEmailAuth": true,
-        "allowOAuth2Auth": false,
-        "allowUsernameAuth": false,
-        "exceptEmailDomains": null,
-        "manageRule": "@request.auth.role = 'super_admin' || (@request.auth.role = 'admin' && @request.auth.association = association)",
-        "minPasswordLength": 8,
-        "onlyEmailDomains": null,
-        "requireEmail": true
+      },
+      {
+        "id": "description",
+        "name": "description",
+        "type": "text",
+        "system": false,
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": 0,
+          "max": 1000,
+          "pattern": ""
+        }
+      },
+      {
+        "id": "settings",
+        "name": "settings",
+        "type": "json",
+        "system": false,
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "maxSize": 2000000
+        }
+      },
+      {
+        "id": "status",
+        "name": "status",
+        "type": "select",
+        "system": false,
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "maxSelect": 1,
+          "values": ["active", "inactive"]
+        }
       }
-    },
-    {
-      "id": "members",
-      "name": "members",
-      "type": "base",
-      "system": false,
-      "schema": [
-        {
-          "id": "user",
-          "name": "user",
-          "type": "relation",
-          "system": false,
-          "required": true,
-          "unique": true,
-          "options": {
-            "collectionId": "users",
-            "cascadeDelete": true,
-            "minSelect": 1,
-            "maxSelect": 1,
-            "displayFields": ["name", "email"]
-          }
-        },
-        {
-          "id": "association",
-          "name": "association",
-          "type": "relation",
-          "system": false,
-          "required": true,
-          "unique": false,
-          "options": {
-            "collectionId": "associations",
-            "cascadeDelete": false,
-            "minSelect": 1,
-            "maxSelect": 1,
-            "displayFields": ["name"]
-          }
-        },
-        {
-          "id": "member_id",
-          "name": "member_id",
-          "type": "text",
-          "system": false,
-          "required": true,
-          "unique": true,
-          "options": {
-            "min": 3,
-            "max": 50,
-            "pattern": ""
-          }
-        },
-        {
-          "id": "name",
-          "name": "name",
-          "type": "text",
-          "system": false,
-          "required": true,
-          "unique": false,
-          "options": {
-            "min": 1,
-            "max": 255,
-            "pattern": ""
-          }
-        },
-        {
-          "id": "email",
-          "name": "email",
-          "type": "email",
-          "system": false,
-          "required": true,
-          "unique": false,
-          "options": {
-            "exceptDomains": null,
-            "onlyDomains": null
-          }
-        },
-        {
-          "id": "phone",
-          "name": "phone",
-          "type": "text",
-          "system": false,
-          "required": false,
-          "unique": false,
-          "options": {
-            "min": 0,
-            "max": 20,
-            "pattern": ""
-          }
-        },
-        {
-          "id": "address",
-          "name": "address",
-          "type": "text",
-          "system": false,
-          "required": false,
-          "unique": false,
-          "options": {
-            "min": 0,
-            "max": 500,
-            "pattern": ""
-          }
-        },
-        {
-          "id": "date_of_birth",
-          "name": "date_of_birth",
-          "type": "date",
-          "system": false,
-          "required": false,
-          "unique": false,
-          "options": {
-            "min": "",
-            "max": ""
-          }
-        },
-        {
-          "id": "status",
-          "name": "status",
-          "type": "select",
-          "system": false,
-          "required": true,
-          "unique": false,
-          "options": {
-            "maxSelect": 1,
-            "values": ["pending", "active", "inactive", "suspended"]
-          }
-        },
-        {
-          "id": "membership_type",
-          "name": "membership_type",
-          "type": "select",
-          "system": false,
-          "required": false,
-          "unique": false,
-          "options": {
-            "maxSelect": 1,
-            "values": ["regular", "premium", "student", "senior", "honorary"]
-          }
-        },
-        {
-          "id": "join_date",
-          "name": "join_date",
-          "type": "date",
-          "system": false,
-          "required": false,
-          "unique": false,
-          "options": {
-            "min": "",
-            "max": ""
-          }
-        },
-        {
-          "id": "notes",
-          "name": "notes",
-          "type": "text",
-          "system": false,
-          "required": false,
-          "unique": false,
-          "options": {
-            "min": 0,
-            "max": 2000,
-            "pattern": ""
-          }
-        },
-        {
-          "id": "documents",
-          "name": "documents",
-          "type": "file",
-          "system": false,
-          "required": false,
-          "unique": false,
-          "options": {
-            "maxSelect": 10,
-            "maxSize": 10485760,
-            "mimeTypes": ["application/pdf", "image/jpeg", "image/png", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
-            "thumbs": null
-          }
+    ],
+    "indexes": [
+      "CREATE UNIQUE INDEX `idx_associations_code` ON `associations` (`code`)",
+      "CREATE INDEX `idx_associations_status` ON `associations` (`status`)"
+    ],
+    "listRule": "@request.auth.id != \"\"",
+    "viewRule": "@request.auth.id != \"\"",
+    "createRule": "@request.auth.role = \"super_admin\"",
+    "updateRule": "@request.auth.role = \"super_admin\" || (@request.auth.role = \"admin\" && @request.auth.association = id)",
+    "deleteRule": "@request.auth.role = \"super_admin\"",
+    "options": {}
+  },
+  {
+    "id": "users",
+    "name": "users",
+    "type": "auth",
+    "system": false,
+    "schema": [
+      {
+        "id": "name",
+        "name": "name",
+        "type": "text",
+        "system": false,
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": 1,
+          "max": 255,
+          "pattern": ""
         }
-      ],
-      "indexes": [
-        "CREATE UNIQUE INDEX `idx_members_member_id` ON `members` (`member_id`)",
-        "CREATE UNIQUE INDEX `idx_members_user` ON `members` (`user`)",
-        "CREATE INDEX `idx_members_association` ON `members` (`association`)",
-        "CREATE INDEX `idx_members_status` ON `members` (`status`)",
-        "CREATE INDEX `idx_members_email` ON `members` (`email`)"
-      ],
-      "listRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || (@request.auth.association = association && @request.auth.role = 'admin') || @request.auth.id = user)",
-      "viewRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || (@request.auth.association = association && @request.auth.role = 'admin') || @request.auth.id = user)",
-      "createRule": "@request.auth.id != ''",
-      "updateRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || (@request.auth.association = association && @request.auth.role = 'admin') || (@request.auth.id = user && status = 'pending'))",
-      "deleteRule": "@request.auth.role = 'super_admin' || (@request.auth.association = association && @request.auth.role = 'admin')",
-      "options": {}
-    },
-    {
-      "id": "dues",
-      "name": "dues",
-      "type": "base",
-      "system": false,
-      "schema": [
-        {
-          "id": "member",
-          "name": "member",
-          "type": "relation",
-          "system": false,
-          "required": true,
-          "unique": false,
-          "options": {
-            "collectionId": "members",
-            "cascadeDelete": true,
-            "minSelect": 1,
-            "maxSelect": 1,
-            "displayFields": ["name", "member_id"]
-          }
-        },
-        {
-          "id": "association",
-          "name": "association",
-          "type": "relation",
-          "system": false,
-          "required": true,
-          "unique": false,
-          "options": {
-            "collectionId": "associations",
-            "cascadeDelete": false,
-            "minSelect": 1,
-            "maxSelect": 1,
-            "displayFields": ["name"]
-          }
-        },
-        {
-          "id": "type",
-          "name": "type",
-          "type": "select",
-          "system": false,
-          "required": true,
-          "unique": false,
-          "options": {
-            "maxSelect": 1,
-            "values": ["monthly", "quarterly", "annual", "registration", "special"]
-          }
-        },
-        {
-          "id": "amount",
-          "name": "amount",
-          "type": "number",
-          "system": false,
-          "required": true,
-          "unique": false,
-          "options": {
-            "min": 0,
-            "max": null
-          }
-        },
-        {
-          "id": "due_date",
-          "name": "due_date",
-          "type": "date",
-          "system": false,
-          "required": true,
-          "unique": false,
-          "options": {
-            "min": "",
-            "max": ""
-          }
-        },
-        {
-          "id": "paid_date",
-          "name": "paid_date",
-          "type": "date",
-          "system": false,
-          "required": false,
-          "unique": false,
-          "options": {
-            "min": "",
-            "max": ""
-          }
-        },
-        {
-          "id": "status",
-          "name": "status",
-          "type": "select",
-          "system": false,
-          "required": true,
-          "unique": false,
-          "options": {
-            "maxSelect": 1,
-            "values": ["pending", "paid", "overdue", "waived"]
-          }
-        },
-        {
-          "id": "payment_method",
-          "name": "payment_method",
-          "type": "select",
-          "system": false,
-          "required": false,
-          "unique": false,
-          "options": {
-            "maxSelect": 1,
-            "values": ["cash", "check", "card", "bank_transfer", "paypal", "other"]
-          }
-        },
-        {
-          "id": "reference_number",
-          "name": "reference_number",
-          "type": "text",
-          "system": false,
-          "required": false,
-          "unique": false,
-          "options": {
-            "min": 0,
-            "max": 100,
-            "pattern": ""
-          }
-        },
-        {
-          "id": "notes",
-          "name": "notes",
-          "type": "text",
-          "system": false,
-          "required": false,
-          "unique": false,
-          "options": {
-            "min": 0,
-            "max": 1000,
-            "pattern": ""
-          }
+      },
+      {
+        "id": "avatar",
+        "name": "avatar",
+        "type": "file",
+        "system": false,
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "mimeTypes": ["image/jpeg", "image/png", "image/svg+xml", "image/gif", "image/webp"],
+          "thumbs": ["100x100"],
+          "maxSelect": 1,
+          "maxSize": 5242880,
+          "protected": false
         }
-      ],
-      "indexes": [
-        "CREATE INDEX `idx_dues_member` ON `dues` (`member`)",
-        "CREATE INDEX `idx_dues_association` ON `dues` (`association`)",
-        "CREATE INDEX `idx_dues_status` ON `dues` (`status`)",
-        "CREATE INDEX `idx_dues_due_date` ON `dues` (`due_date`)"
-      ],
-      "listRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || (@request.auth.association = association && @request.auth.role = 'admin') || member.user = @request.auth.id)",
-      "viewRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || (@request.auth.association = association && @request.auth.role = 'admin') || member.user = @request.auth.id)",
-      "createRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || (@request.auth.association = association && @request.auth.role = 'admin'))",
-      "updateRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || (@request.auth.association = association && @request.auth.role = 'admin'))",
-      "deleteRule": "@request.auth.role = 'super_admin' || (@request.auth.association = association && @request.auth.role = 'admin')",
-      "options": {}
-    },
-    {
-      "id": "announcements",
-      "name": "announcements",
-      "type": "base",
-      "system": false,
-      "schema": [
-        {
-          "id": "association",
-          "name": "association",
-          "type": "relation",
-          "system": false,
-          "required": true,
-          "unique": false,
-          "options": {
-            "collectionId": "associations",
-            "cascadeDelete": false,
-            "minSelect": 1,
-            "maxSelect": 1,
-            "displayFields": ["name"]
-          }
-        },
-        {
-          "id": "title",
-          "name": "title",
-          "type": "text",
-          "system": false,
-          "required": true,
-          "unique": false,
-          "options": {
-            "min": 1,
-            "max": 255,
-            "pattern": ""
-          }
-        },
-        {
-          "id": "content",
-          "name": "content",
-          "type": "text",
-          "system": false,
-          "required": true,
-          "unique": false,
-          "options": {
-            "min": 1,
-            "max": 5000,
-            "pattern": ""
-          }
-        },
-        {
-          "id": "type",
-          "name": "type",
-          "type": "select",
-          "system": false,
-          "required": true,
-          "unique": false,
-          "options": {
-            "maxSelect": 1,
-            "values": ["general", "urgent", "event", "reminder"]
-          }
-        },
-        {
-          "id": "target_audience",
-          "name": "target_audience",
-          "type": "select",
-          "system": false,
-          "required": true,
-          "unique": false,
-          "options": {
-            "maxSelect": 1,
-            "values": ["all", "active_members", "pending_members", "admins"]
-          }
-        },
-        {
-          "id": "publish_date",
-          "name": "publish_date",
-          "type": "date",
-          "system": false,
-          "required": false,
-          "unique": false,
-          "options": {
-            "min": "",
-            "max": ""
-          }
-        },
-        {
-          "id": "expiry_date",
-          "name": "expiry_date",
-          "type": "date",
-          "system": false,
-          "required": false,
-          "unique": false,
-          "options": {
-            "min": "",
-            "max": ""
-          }
-        },
-        {
-          "id": "status",
-          "name": "status",
-          "type": "select",
-          "system": false,
-          "required": true,
-          "unique": false,
-          "options": {
-            "maxSelect": 1,
-            "values": ["draft", "published", "archived"]
-          }
+      },
+      {
+        "id": "role",
+        "name": "role",
+        "type": "select",
+        "system": false,
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "maxSelect": 1,
+          "values": ["super_admin", "admin", "member"]
         }
-      ],
-      "indexes": [
-        "CREATE INDEX `idx_announcements_association` ON `announcements` (`association`)",
-        "CREATE INDEX `idx_announcements_status` ON `announcements` (`status`)",
-        "CREATE INDEX `idx_announcements_publish_date` ON `announcements` (`publish_date`)"
-      ],
-      "listRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || @request.auth.association = association)",
-      "viewRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || @request.auth.association = association)",
-      "createRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || (@request.auth.association = association && @request.auth.role = 'admin'))",
-      "updateRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || (@request.auth.association = association && @request.auth.role = 'admin'))",
-      "deleteRule": "@request.auth.role = 'super_admin' || (@request.auth.association = association && @request.auth.role = 'admin')",
-      "options": {}
+      },
+      {
+        "id": "association",
+        "name": "association",
+        "type": "relation",
+        "system": false,
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "collectionId": "associations",
+          "cascadeDelete": false,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": ["name"]
+        }
+      }
+    ],
+    "indexes": [
+      "CREATE INDEX `idx_users_association` ON `users` (`association`)",
+      "CREATE INDEX `idx_users_role` ON `users` (`role`)"
+    ],
+    "listRule": "@request.auth.id != \"\" && (@request.auth.role = \"super_admin\" || @request.auth.association = association)",
+    "viewRule": "@request.auth.id != \"\" && (@request.auth.id = id || @request.auth.role = \"super_admin\" || (@request.auth.role = \"admin\" && @request.auth.association = association))",
+    "createRule": "",
+    "updateRule": "@request.auth.id = id || @request.auth.role = \"super_admin\" || (@request.auth.role = \"admin\" && @request.auth.association = association)",
+    "deleteRule": "@request.auth.id = id || @request.auth.role = \"super_admin\"",
+    "options": {
+      "allowEmailAuth": true,
+      "allowOAuth2Auth": false,
+      "allowUsernameAuth": false,
+      "exceptEmailDomains": null,
+      "manageRule": "@request.auth.role = \"super_admin\" || (@request.auth.role = \"admin\" && @request.auth.association = association)",
+      "minPasswordLength": 8,
+      "onlyEmailDomains": null,
+      "onlyVerified": false,
+      "requireEmail": true
     }
-  ]
+  },
+  {
+    "id": "members",
+    "name": "members",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "id": "user",
+        "name": "user",
+        "type": "relation",
+        "system": false,
+        "required": true,
+        "presentable": false,
+        "unique": true,
+        "options": {
+          "collectionId": "users",
+          "cascadeDelete": true,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": ["name", "email"]
+        }
+      },
+      {
+        "id": "association",
+        "name": "association",
+        "type": "relation",
+        "system": false,
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "collectionId": "associations",
+          "cascadeDelete": false,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": ["name"]
+        }
+      },
+      {
+        "id": "member_id",
+        "name": "member_id",
+        "type": "text",
+        "system": false,
+        "required": true,
+        "presentable": false,
+        "unique": true,
+        "options": {
+          "min": 3,
+          "max": 50,
+          "pattern": ""
+        }
+      },
+      {
+        "id": "name",
+        "name": "name",
+        "type": "text",
+        "system": false,
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": 1,
+          "max": 255,
+          "pattern": ""
+        }
+      },
+      {
+        "id": "email",
+        "name": "email",
+        "type": "email",
+        "system": false,
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "exceptDomains": null,
+          "onlyDomains": null
+        }
+      },
+      {
+        "id": "phone",
+        "name": "phone",
+        "type": "text",
+        "system": false,
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": null,
+          "max": 20,
+          "pattern": ""
+        }
+      },
+      {
+        "id": "address",
+        "name": "address",
+        "type": "text",
+        "system": false,
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": null,
+          "max": 500,
+          "pattern": ""
+        }
+      },
+      {
+        "id": "date_of_birth",
+        "name": "date_of_birth",
+        "type": "date",
+        "system": false,
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": "",
+          "max": ""
+        }
+      },
+      {
+        "id": "status",
+        "name": "status",
+        "type": "select",
+        "system": false,
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "maxSelect": 1,
+          "values": ["pending", "active", "inactive", "suspended"]
+        }
+      },
+      {
+        "id": "membership_type",
+        "name": "membership_type",
+        "type": "select",
+        "system": false,
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "maxSelect": 1,
+          "values": ["regular", "premium", "student", "senior", "honorary"]
+        }
+      },
+      {
+        "id": "join_date",
+        "name": "join_date",
+        "type": "date",
+        "system": false,
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": "",
+          "max": ""
+        }
+      },
+      {
+        "id": "notes",
+        "name": "notes",
+        "type": "text",
+        "system": false,
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": null,
+          "max": 2000,
+          "pattern": ""
+        }
+      },
+      {
+        "id": "documents",
+        "name": "documents",
+        "type": "file",
+        "system": false,
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "mimeTypes": ["application/pdf", "image/jpeg", "image/png", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+          "thumbs": null,
+          "maxSelect": 10,
+          "maxSize": 10485760,
+          "protected": false
+        }
+      }
+    ],
+    "indexes": [
+      "CREATE UNIQUE INDEX `idx_members_member_id` ON `members` (`member_id`)",
+      "CREATE UNIQUE INDEX `idx_members_user` ON `members` (`user`)",
+      "CREATE INDEX `idx_members_association` ON `members` (`association`)",
+      "CREATE INDEX `idx_members_status` ON `members` (`status`)",
+      "CREATE INDEX `idx_members_email` ON `members` (`email`)"
+    ],
+    "listRule": "@request.auth.id != \"\" && (@request.auth.role = \"super_admin\" || (@request.auth.association = association && @request.auth.role = \"admin\") || @request.auth.id = user)",
+    "viewRule": "@request.auth.id != \"\" && (@request.auth.role = \"super_admin\" || (@request.auth.association = association && @request.auth.role = \"admin\") || @request.auth.id = user)",
+    "createRule": "@request.auth.id != \"\"",
+    "updateRule": "@request.auth.id != \"\" && (@request.auth.role = \"super_admin\" || (@request.auth.association = association && @request.auth.role = \"admin\") || (@request.auth.id = user && status = \"pending\"))",
+    "deleteRule": "@request.auth.role = \"super_admin\" || (@request.auth.association = association && @request.auth.role = \"admin\")",
+    "options": {}
+  },
+  {
+    "id": "dues",
+    "name": "dues",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "id": "member",
+        "name": "member",
+        "type": "relation",
+        "system": false,
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "collectionId": "members",
+          "cascadeDelete": true,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": ["name", "member_id"]
+        }
+      },
+      {
+        "id": "association",
+        "name": "association",
+        "type": "relation",
+        "system": false,
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "collectionId": "associations",
+          "cascadeDelete": false,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": ["name"]
+        }
+      },
+      {
+        "id": "type",
+        "name": "type",
+        "type": "select",
+        "system": false,
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "maxSelect": 1,
+          "values": ["monthly", "quarterly", "annual", "registration", "special"]
+        }
+      },
+      {
+        "id": "amount",
+        "name": "amount",
+        "type": "number",
+        "system": false,
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": 0,
+          "max": null,
+          "noDecimal": false
+        }
+      },
+      {
+        "id": "due_date",
+        "name": "due_date",
+        "type": "date",
+        "system": false,
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": "",
+          "max": ""
+        }
+      },
+      {
+        "id": "paid_date",
+        "name": "paid_date",
+        "type": "date",
+        "system": false,
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": "",
+          "max": ""
+        }
+      },
+      {
+        "id": "status",
+        "name": "status",
+        "type": "select",
+        "system": false,
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "maxSelect": 1,
+          "values": ["pending", "paid", "overdue", "waived"]
+        }
+      },
+      {
+        "id": "payment_method",
+        "name": "payment_method",
+        "type": "select",
+        "system": false,
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "maxSelect": 1,
+          "values": ["cash", "check", "card", "bank_transfer", "paypal", "other"]
+        }
+      },
+      {
+        "id": "reference_number",
+        "name": "reference_number",
+        "type": "text",
+        "system": false,
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": null,
+          "max": 100,
+          "pattern": ""
+        }
+      },
+      {
+        "id": "notes",
+        "name": "notes",
+        "type": "text",
+        "system": false,
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": null,
+          "max": 1000,
+          "pattern": ""
+        }
+      }
+    ],
+    "indexes": [
+      "CREATE INDEX `idx_dues_member` ON `dues` (`member`)",
+      "CREATE INDEX `idx_dues_association` ON `dues` (`association`)",
+      "CREATE INDEX `idx_dues_status` ON `dues` (`status`)",
+      "CREATE INDEX `idx_dues_due_date` ON `dues` (`due_date`)"
+    ],
+    "listRule": "@request.auth.id != \"\" && (@request.auth.role = \"super_admin\" || (@request.auth.association = association && @request.auth.role = \"admin\") || member.user = @request.auth.id)",
+    "viewRule": "@request.auth.id != \"\" && (@request.auth.role = \"super_admin\" || (@request.auth.association = association && @request.auth.role = \"admin\") || member.user = @request.auth.id)",
+    "createRule": "@request.auth.id != \"\" && (@request.auth.role = \"super_admin\" || (@request.auth.association = association && @request.auth.role = \"admin\"))",
+    "updateRule": "@request.auth.id != \"\" && (@request.auth.role = \"super_admin\" || (@request.auth.association = association && @request.auth.role = \"admin\"))",
+    "deleteRule": "@request.auth.role = \"super_admin\" || (@request.auth.association = association && @request.auth.role = \"admin\")",
+    "options": {}
+  },
+  {
+    "id": "announcements",
+    "name": "announcements",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "id": "association",
+        "name": "association",
+        "type": "relation",
+        "system": false,
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "collectionId": "associations",
+          "cascadeDelete": false,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": ["name"]
+        }
+      },
+      {
+        "id": "title",
+        "name": "title",
+        "type": "text",
+        "system": false,
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": 1,
+          "max": 255,
+          "pattern": ""
+        }
+      },
+      {
+        "id": "content",
+        "name": "content",
+        "type": "text",
+        "system": false,
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": 1,
+          "max": 5000,
+          "pattern": ""
+        }
+      },
+      {
+        "id": "type",
+        "name": "type",
+        "type": "select",
+        "system": false,
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "maxSelect": 1,
+          "values": ["general", "urgent", "event", "reminder"]
+        }
+      },
+      {
+        "id": "target_audience",
+        "name": "target_audience",
+        "type": "select",
+        "system": false,
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "maxSelect": 1,
+          "values": ["all", "active_members", "pending_members", "admins"]
+        }
+      },
+      {
+        "id": "publish_date",
+        "name": "publish_date",
+        "type": "date",
+        "system": false,
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": "",
+          "max": ""
+        }
+      },
+      {
+        "id": "expiry_date",
+        "name": "expiry_date",
+        "type": "date",
+        "system": false,
+        "required": false,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "min": "",
+          "max": ""
+        }
+      },
+      {
+        "id": "status",
+        "name": "status",
+        "type": "select",
+        "system": false,
+        "required": true,
+        "presentable": false,
+        "unique": false,
+        "options": {
+          "maxSelect": 1,
+          "values": ["draft", "published", "archived"]
+        }
+      }
+    ],
+    "indexes": [
+      "CREATE INDEX `idx_announcements_association` ON `announcements` (`association`)",
+      "CREATE INDEX `idx_announcements_status` ON `announcements` (`status`)",
+      "CREATE INDEX `idx_announcements_publish_date` ON `announcements` (`publish_date`)"
+    ],
+    "listRule": "@request.auth.id != \"\" && (@request.auth.role = \"super_admin\" || @request.auth.association = association)",
+    "viewRule": "@request.auth.id != \"\" && (@request.auth.role = \"super_admin\" || @request.auth.association = association)",
+    "createRule": "@request.auth.id != \"\" && (@request.auth.role = \"super_admin\" || (@request.auth.association = association && @request.auth.role = \"admin\"))",
+    "updateRule": "@request.auth.id != \"\" && (@request.auth.role = \"super_admin\" || (@request.auth.association = association && @request.auth.role = \"admin\"))",
+    "deleteRule": "@request.auth.role = \"super_admin\" || (@request.auth.association = association && @request.auth.role = \"admin\")",
+    "options": {}
   },
   {
     "id": "mailing_lists",
@@ -632,11 +674,12 @@
         "type": "relation",
         "system": false,
         "required": true,
+        "presentable": false,
         "unique": false,
         "options": {
           "collectionId": "associations",
           "cascadeDelete": false,
-          "minSelect": 1,
+          "minSelect": null,
           "maxSelect": 1,
           "displayFields": ["name"]
         }
@@ -647,6 +690,7 @@
         "type": "text",
         "system": false,
         "required": true,
+        "presentable": false,
         "unique": false,
         "options": {
           "min": 1,
@@ -660,9 +704,10 @@
         "type": "text",
         "system": false,
         "required": false,
+        "presentable": false,
         "unique": false,
         "options": {
-          "min": 0,
+          "min": null,
           "max": 1000,
           "pattern": ""
         }
@@ -673,6 +718,7 @@
         "type": "select",
         "system": false,
         "required": true,
+        "presentable": false,
         "unique": false,
         "options": {
           "maxSelect": 1,
@@ -685,6 +731,7 @@
         "type": "select",
         "system": false,
         "required": true,
+        "presentable": false,
         "unique": false,
         "options": {
           "maxSelect": 1,
@@ -697,6 +744,7 @@
         "type": "bool",
         "system": false,
         "required": false,
+        "presentable": false,
         "unique": false,
         "options": {}
       },
@@ -706,6 +754,7 @@
         "type": "email",
         "system": false,
         "required": false,
+        "presentable": false,
         "unique": false,
         "options": {
           "exceptDomains": null,
@@ -718,11 +767,11 @@
       "CREATE INDEX `idx_mailing_lists_status` ON `mailing_lists` (`status`)",
       "CREATE INDEX `idx_mailing_lists_type` ON `mailing_lists` (`type`)"
     ],
-    "listRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || @request.auth.association = association)",
-    "viewRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || @request.auth.association = association)",
-    "createRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || (@request.auth.association = association && @request.auth.role = 'admin'))",
-    "updateRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || (@request.auth.association = association && @request.auth.role = 'admin'))",
-    "deleteRule": "@request.auth.role = 'super_admin' || (@request.auth.association = association && @request.auth.role = 'admin')",
+    "listRule": "@request.auth.id != \"\" && (@request.auth.role = \"super_admin\" || @request.auth.association = association)",
+    "viewRule": "@request.auth.id != \"\" && (@request.auth.role = \"super_admin\" || @request.auth.association = association)",
+    "createRule": "@request.auth.id != \"\" && (@request.auth.role = \"super_admin\" || (@request.auth.association = association && @request.auth.role = \"admin\"))",
+    "updateRule": "@request.auth.id != \"\" && (@request.auth.role = \"super_admin\" || (@request.auth.association = association && @request.auth.role = \"admin\"))",
+    "deleteRule": "@request.auth.role = \"super_admin\" || (@request.auth.association = association && @request.auth.role = \"admin\")",
     "options": {}
   },
   {
@@ -737,11 +786,12 @@
         "type": "relation",
         "system": false,
         "required": true,
+        "presentable": false,
         "unique": false,
         "options": {
           "collectionId": "members",
           "cascadeDelete": true,
-          "minSelect": 1,
+          "minSelect": null,
           "maxSelect": 1,
           "displayFields": ["name", "email"]
         }
@@ -752,11 +802,12 @@
         "type": "relation",
         "system": false,
         "required": true,
+        "presentable": false,
         "unique": false,
         "options": {
           "collectionId": "mailing_lists",
           "cascadeDelete": true,
-          "minSelect": 1,
+          "minSelect": null,
           "maxSelect": 1,
           "displayFields": ["name"]
         }
@@ -767,6 +818,7 @@
         "type": "select",
         "system": false,
         "required": true,
+        "presentable": false,
         "unique": false,
         "options": {
           "maxSelect": 1,
@@ -779,6 +831,7 @@
         "type": "date",
         "system": false,
         "required": false,
+        "presentable": false,
         "unique": false,
         "options": {
           "min": "",
@@ -791,6 +844,7 @@
         "type": "date",
         "system": false,
         "required": false,
+        "presentable": false,
         "unique": false,
         "options": {
           "min": "",
@@ -803,8 +857,11 @@
         "type": "json",
         "system": false,
         "required": false,
+        "presentable": false,
         "unique": false,
-        "options": {}
+        "options": {
+          "maxSize": 2000000
+        }
       }
     ],
     "indexes": [
@@ -813,10 +870,11 @@
       "CREATE INDEX `idx_subscriptions_mailing_list` ON `mailing_list_subscriptions` (`mailing_list`)",
       "CREATE INDEX `idx_subscriptions_status` ON `mailing_list_subscriptions` (`status`)"
     ],
-    "listRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || member.user = @request.auth.id || (@request.auth.role = 'admin' && member.association = @request.auth.association))",
-    "viewRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || member.user = @request.auth.id || (@request.auth.role = 'admin' && member.association = @request.auth.association))",
-    "createRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || member.user = @request.auth.id || (@request.auth.role = 'admin' && member.association = @request.auth.association))",
-    "updateRule": "@request.auth.id != '' && (@request.auth.role = 'super_admin' || member.user = @request.auth.id || (@request.auth.role = 'admin' && member.association = @request.auth.association))",
-    "deleteRule": "@request.auth.role = 'super_admin' || member.user = @request.auth.id || (@request.auth.role = 'admin' && member.association = @request.auth.association)",
+    "listRule": "@request.auth.id != \"\" && (@request.auth.role = \"super_admin\" || member.user = @request.auth.id || (@request.auth.role = \"admin\" && member.association = @request.auth.association))",
+    "viewRule": "@request.auth.id != \"\" && (@request.auth.role = \"super_admin\" || member.user = @request.auth.id || (@request.auth.role = \"admin\" && member.association = @request.auth.association))",
+    "createRule": "@request.auth.id != \"\" && (@request.auth.role = \"super_admin\" || member.user = @request.auth.id || (@request.auth.role = \"admin\" && member.association = @request.auth.association))",
+    "updateRule": "@request.auth.id != \"\" && (@request.auth.role = \"super_admin\" || member.user = @request.auth.id || (@request.auth.role = \"admin\" && member.association = @request.auth.association))",
+    "deleteRule": "@request.auth.role = \"super_admin\" || member.user = @request.auth.id || (@request.auth.role = \"admin\" && member.association = @request.auth.association)",
     "options": {}
-}
+  }
+]

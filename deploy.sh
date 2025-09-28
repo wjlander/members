@@ -7,7 +7,7 @@
 set -e  # Exit on any error
 
 # Configuration
-POCKETBASE_VERSION="0.20.1"
+POCKETBASE_VERSION="0.30.0"
 APP_USER="pocketbase"
 APP_DIR="/opt/member-management"
 DATA_DIR="/var/lib/pocketbase"
