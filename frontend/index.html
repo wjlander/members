@@ -42,6 +42,11 @@
                                         class="px-3 py-2 rounded transition-colors">
                                     <i class="fas fa-chart-bar mr-1"></i> Reports
                                 </button>
+                                <button @click="currentView = 'mailing-lists'" 
+                                        :class="currentView === 'mailing-lists' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-blue-600'"
+                                        class="px-3 py-2 rounded transition-colors">
+                                    <i class="fas fa-envelope mr-1"></i> Mailing Lists
+                                </button>
                             </div>
                         </template>
                         <template x-if="currentUser?.role === 'member'">
