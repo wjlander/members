@@ -91,7 +91,7 @@
     "system": false,
     "schema": [
       {
-        "id": "user_name",
+        "id": "user_name_field",
         "name": "name",
         "type": "text",
         "system": false,
@@ -105,7 +105,7 @@
         }
       },
       {
-        "id": "user_avatar",
+        "id": "user_avatar_field",
         "name": "avatar",
         "type": "file",
         "system": false,
@@ -121,7 +121,7 @@
         }
       },
       {
-        "id": "user_role",
+        "id": "user_role_field",
         "name": "role",
         "type": "select",
         "system": false,
@@ -134,7 +134,7 @@
         }
       },
       {
-        "id": "user_association",
+        "id": "user_association_field",
         "name": "association",
         "type": "relation",
         "system": false,
@@ -178,7 +178,7 @@
     "system": false,
     "schema": [
       {
-        "id": "member_user",
+        "id": "member_user_field",
         "name": "user",
         "type": "relation",
         "system": false,
@@ -194,7 +194,7 @@
         }
       },
       {
-        "id": "member_association",
+        "id": "member_association_field",
         "name": "association",
         "type": "relation",
         "system": false,
@@ -224,7 +224,7 @@
         }
       },
       {
-        "id": "member_name",
+        "id": "member_name_field",
         "name": "name",
         "type": "text",
         "system": false,
@@ -238,7 +238,7 @@
         }
       },
       {
-        "id": "member_email",
+        "id": "member_email_field",
         "name": "email",
         "type": "email",
         "system": false,
@@ -251,7 +251,7 @@
         }
       },
       {
-        "id": "member_phone",
+        "id": "member_phone_field",
         "name": "phone",
         "type": "text",
         "system": false,
@@ -265,7 +265,7 @@
         }
       },
       {
-        "id": "member_address",
+        "id": "member_address_field",
         "name": "address",
         "type": "text",
         "system": false,
@@ -279,7 +279,7 @@
         }
       },
       {
-        "id": "member_date_of_birth",
+        "id": "member_date_of_birth_field",
         "name": "date_of_birth",
         "type": "date",
         "system": false,
@@ -292,7 +292,7 @@
         }
       },
       {
-        "id": "member_status",
+        "id": "member_status_field",
         "name": "status",
         "type": "select",
         "system": false,
@@ -305,7 +305,7 @@
         }
       },
       {
-        "id": "member_membership_type",
+        "id": "member_membership_type_field",
         "name": "membership_type",
         "type": "select",
         "system": false,
@@ -318,7 +318,7 @@
         }
       },
       {
-        "id": "member_join_date",
+        "id": "member_join_date_field",
         "name": "join_date",
         "type": "date",
         "system": false,
@@ -331,7 +331,7 @@
         }
       },
       {
-        "id": "member_notes",
+        "id": "member_notes_field",
         "name": "notes",
         "type": "text",
         "system": false,
@@ -345,7 +345,7 @@
         }
       },
       {
-        "id": "member_documents",
+        "id": "member_documents_field",
         "name": "documents",
         "type": "file",
         "system": false,
@@ -382,7 +382,7 @@
     "system": false,
     "schema": [
       {
-        "id": "dues_member",
+        "id": "dues_member_field",
         "name": "member",
         "type": "relation",
         "system": false,
@@ -398,7 +398,7 @@
         }
       },
       {
-        "id": "dues_association",
+        "id": "dues_association_field",
         "name": "association",
         "type": "relation",
         "system": false,
@@ -414,7 +414,7 @@
         }
       },
       {
-        "id": "dues_type",
+        "id": "dues_type_field",
         "name": "type",
         "type": "select",
         "system": false,
@@ -427,7 +427,7 @@
         }
       },
       {
-        "id": "dues_amount",
+        "id": "dues_amount_field",
         "name": "amount",
         "type": "number",
         "system": false,
@@ -441,7 +441,7 @@
         }
       },
       {
-        "id": "dues_due_date",
+        "id": "dues_due_date_field",
         "name": "due_date",
         "type": "date",
         "system": false,
@@ -454,7 +454,7 @@
         }
       },
       {
-        "id": "dues_paid_date",
+        "id": "dues_paid_date_field",
         "name": "paid_date",
         "type": "date",
         "system": false,
@@ -467,7 +467,7 @@
         }
       },
       {
-        "id": "dues_status",
+        "id": "dues_status_field",
         "name": "status",
         "type": "select",
         "system": false,
@@ -480,7 +480,7 @@
         }
       },
       {
-        "id": "dues_payment_method",
+        "id": "dues_payment_method_field",
         "name": "payment_method",
         "type": "select",
         "system": false,
@@ -493,7 +493,7 @@
         }
       },
       {
-        "id": "dues_reference_number",
+        "id": "dues_reference_number_field",
         "name": "reference_number",
         "type": "text",
         "system": false,
@@ -507,7 +507,7 @@
         }
       },
       {
-        "id": "dues_notes",
+        "id": "dues_notes_field",
         "name": "notes",
         "type": "text",
         "system": false,
@@ -541,7 +541,7 @@
     "system": false,
     "schema": [
       {
-        "id": "announce_association",
+        "id": "announce_association_field",
         "name": "association",
         "type": "relation",
         "system": false,
@@ -557,7 +557,7 @@
         }
       },
       {
-        "id": "announce_title",
+        "id": "announce_title_field",
         "name": "title",
         "type": "text",
         "system": false,
@@ -571,7 +571,7 @@
         }
       },
       {
-        "id": "announce_content",
+        "id": "announce_content_field",
         "name": "content",
         "type": "text",
         "system": false,
@@ -585,7 +585,7 @@
         }
       },
       {
-        "id": "announce_type",
+        "id": "announce_type_field",
         "name": "type",
         "type": "select",
         "system": false,
@@ -598,7 +598,7 @@
         }
       },
       {
-        "id": "announce_target_audience",
+        "id": "announce_target_audience_field",
         "name": "target_audience",
         "type": "select",
         "system": false,
@@ -611,7 +611,7 @@
         }
       },
       {
-        "id": "announce_publish_date",
+        "id": "announce_publish_date_field",
         "name": "publish_date",
         "type": "date",
         "system": false,
@@ -624,7 +624,7 @@
         }
       },
       {
-        "id": "announce_expiry_date",
+        "id": "announce_expiry_date_field",
         "name": "expiry_date",
         "type": "date",
         "system": false,
@@ -637,7 +637,7 @@
         }
       },
       {
-        "id": "announce_status",
+        "id": "announce_status_field",
         "name": "status",
         "type": "select",
         "system": false,
@@ -669,7 +669,7 @@
     "system": false,
     "schema": [
       {
-        "id": "mlist_association",
+        "id": "mlist_association_field",
         "name": "association",
         "type": "relation",
         "system": false,
@@ -685,7 +685,7 @@
         }
       },
       {
-        "id": "mlist_name",
+        "id": "mlist_name_field",
         "name": "name",
         "type": "text",
         "system": false,
@@ -699,7 +699,7 @@
         }
       },
       {
-        "id": "mlist_description",
+        "id": "mlist_description_field",
         "name": "description",
         "type": "text",
         "system": false,
@@ -713,7 +713,7 @@
         }
       },
       {
-        "id": "mlist_type",
+        "id": "mlist_type_field",
         "name": "type",
         "type": "select",
         "system": false,
@@ -726,7 +726,7 @@
         }
       },
       {
-        "id": "mlist_status",
+        "id": "mlist_status_field",
         "name": "status",
         "type": "select",
         "system": false,
@@ -739,7 +739,7 @@
         }
       },
       {
-        "id": "mlist_auto_subscribe_new_members",
+        "id": "mlist_auto_subscribe_new_members_field",
         "name": "auto_subscribe_new_members",
         "type": "bool",
         "system": false,
@@ -749,7 +749,7 @@
         "options": {}
       },
       {
-        "id": "mlist_moderator_email",
+        "id": "mlist_moderator_email_field",
         "name": "moderator_email",
         "type": "email",
         "system": false,
@@ -781,7 +781,7 @@
     "system": false,
     "schema": [
       {
-        "id": "msub_member",
+        "id": "msub_member_field",
         "name": "member",
         "type": "relation",
         "system": false,
@@ -797,7 +797,7 @@
         }
       },
       {
-        "id": "msub_mailing_list",
+        "id": "msub_mailing_list_field",
         "name": "mailing_list",
         "type": "relation",
         "system": false,
@@ -813,7 +813,7 @@
         }
       },
       {
-        "id": "msub_status",
+        "id": "msub_status_field",
         "name": "status",
         "type": "select",
         "system": false,
@@ -826,7 +826,7 @@
         }
       },
       {
-        "id": "msub_subscribed_date",
+        "id": "msub_subscribed_date_field",
         "name": "subscribed_date",
         "type": "date",
         "system": false,
@@ -839,7 +839,7 @@
         }
       },
       {
-        "id": "msub_unsubscribed_date",
+        "id": "msub_unsubscribed_date_field",
         "name": "unsubscribed_date",
         "type": "date",
         "system": false,
@@ -852,7 +852,7 @@
         }
       },
       {
-        "id": "msub_preferences",
+        "id": "msub_preferences_field",
         "name": "preferences",
         "type": "json",
         "system": false,
