@@ -228,13 +228,12 @@
                     this.error = '';
                     
                     try {
-                        // For super admin, association_id can be null
                         const loginData = {
                             email: this.loginForm.email,
                             password: this.loginForm.password
                         };
                         
-                        // Only add association_id if it's selected
+                        // Only add association_id if it's selected (for regular admins)
                         if (this.loginForm.association_id) {
                             loginData.association_id = this.loginForm.association_id;
                         }
@@ -253,9 +252,10 @@
                             this.success = 'Admin login successful!';
                             this.loginForm = { email: '', password: '', association_id: '' };
                         } else {
-                            this.error = data.error || 'Admin access denied';
+                            this.error = data.error || 'Invalid credentials or insufficient privileges';
                         }
                     } catch (error) {
+                        console.error('Login error:', error);
                         this.error = 'Network error. Please try again.';
                     } finally {
                         this.loading = false;

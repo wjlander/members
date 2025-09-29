@@ -125,8 +125,8 @@ router.post('/login', async (req, res) => {
 
         const { email, password, association_id } = value;
 
-        // Get user with association info
-        let query = `
+        // Get user with association info - super admins don't need association_id
+        const result = await db.query(`
             SELECT 
                 u.*,
                 a.name as association_name,
@@ -136,36 +136,36 @@ router.post('/login', async (req, res) => {
             LEFT JOIN associations a ON u.association_id = a.id
             LEFT JOIN members m ON u.id = m.user_id
             WHERE u.email = $1
-        `;
-        let params = [email];
-        
-        // If association_id is provided, filter by it (for regular admins)
-        // Super admins can login without specifying association
-        if (association_id) {
-            query += ` AND u.association_id = $2`;
-            params.push(association_id);
-        }
-        
-        const result = await db.query(`
-            ${query}
-        `, params);
+        `, [email]);
 
         if (result.rows.length === 0) {
-            logger.warn('Login attempt with invalid credentials', { email, association_id });
+            logger.warn('Login attempt with invalid email', { email });
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
         const user = result.rows[0];
         
-        // If association_id was provided but user doesn't belong to it, deny access
-        if (association_id && user.association_id !== association_id) {
-            logger.warn('Login attempt with wrong association', { email, association_id, userAssociation: user.association_id });
-            return res.status(401).json({ error: 'Invalid credentials' });
+        // For non-super admins, validate association if provided
+        if (user.role !== 'super_admin') {
+            // Regular admins and members need association validation
+            if (association_id && user.association_id !== association_id) {
+                logger.warn('Login attempt with wrong association', { 
+                    email, 
+                    providedAssociation: association_id, 
+                    userAssociation: user.association_id 
+                });
+                return res.status(401).json({ error: 'Invalid credentials' });
+            }
+            
+            // For regular users, association_id should match if they have one
+            if (user.association_id && association_id && user.association_id !== association_id) {
+                logger.warn('Association mismatch for regular user', { email, role: user.role });
+                return res.status(401).json({ error: 'Invalid credentials' });
+            }
+        } else {
+            // Super admin can login regardless of association_id parameter
+            logger.info('Super admin login attempt', { email });
         }
-        
-        // Super admins can login without association, regular admins need association match
-        if (user.role !== 'super_admin' && association_id && user.association_id !== association_id) {
-            logger.warn('Non-super admin login with wrong association', { email, role: user.role });
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
