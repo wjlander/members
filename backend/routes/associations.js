@@ -14,17 +14,30 @@ const associationSchema = Joi.object({
 });
 
 // Get all associations (super admin only)
-router.get('/', authenticateToken, requireRole(['super_admin']), async (req, res) => {
+router.get('/', authenticateToken, async (req, res) => {
     try {
-        const result = await db.query(`
+        // Super admins can see all associations, regular admins only see their own
+        let query = `
             SELECT 
                 a.*,
                 COUNT(m.id) as member_count
             FROM associations a
             LEFT JOIN members m ON a.id = m.association_id
-            GROUP BY a.id
-            ORDER BY a.name
-        `);
+        `;
+        let params = [];
+        
+        if (req.user.role === 'super_admin') {
+            // Super admin sees all associations
+            query += ` GROUP BY a.id ORDER BY a.name`;
+        } else {
+            // Regular admin sees only their association
+            query += ` WHERE a.id = $1 GROUP BY a.id ORDER BY a.name`;
+            params.push(req.user.association_id);
+        }
+        
+        const result = await db.query(`
+            ${query}
+        `, params);
 
         res.json(result.rows);
     } catch (error) {

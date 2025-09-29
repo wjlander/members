@@ -20,7 +20,7 @@ const registerSchema = Joi.object({
 const loginSchema = Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().required(),
-    association_id: Joi.string().uuid().required()
+    association_id: Joi.string().uuid().optional()
 });
 
 // Register new user
@@ -126,7 +126,7 @@ router.post('/login', async (req, res) => {
         const { email, password, association_id } = value;
 
         // Get user with association info
-        const result = await db.query(`
+        let query = `
             SELECT 
                 u.*,
                 a.name as association_name,
@@ -135,8 +135,20 @@ router.post('/login', async (req, res) => {
             FROM users u
             LEFT JOIN associations a ON u.association_id = a.id
             LEFT JOIN members m ON u.id = m.user_id
-            WHERE u.email = $1 AND u.association_id = $2
-        `, [email, association_id]);
+            WHERE u.email = $1
+        `;
+        let params = [email];
+        
+        // If association_id is provided, filter by it (for regular admins)
+        // Super admins can login without specifying association
+        if (association_id) {
+            query += ` AND u.association_id = $2`;
+            params.push(association_id);
+        }
+        
+        const result = await db.query(`
+            ${query}
+        `, params);
 
         if (result.rows.length === 0) {
             logger.warn('Login attempt with invalid credentials', { email, association_id });
@@ -144,6 +156,18 @@ router.post('/login', async (req, res) => {
         }
 
         const user = result.rows[0];
+        
+        // If association_id was provided but user doesn't belong to it, deny access
+        if (association_id && user.association_id !== association_id) {
+            logger.warn('Login attempt with wrong association', { email, association_id, userAssociation: user.association_id });
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+        
+        // Super admins can login without association, regular admins need association match
+        if (user.role !== 'super_admin' && association_id && user.association_id !== association_id) {
+            logger.warn('Non-super admin login with wrong association', { email, role: user.role });
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
 
         // Check password
         const validPassword = await bcrypt.compare(password, user.password_hash);
