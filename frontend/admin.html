@@ -90,10 +90,10 @@
             
             if (currentHost.includes('p.ringing.org.uk')) {
                 // We're on the admin domain, redirect to the main member interface with admin access
-                window.location.href = 'https://member.ringing.org.uk/admin';
+                window.location.href = 'https://member.ringing.org.uk/#admin';
             } else {
                 // Fallback - try to access admin interface on current domain
-                window.location.href = '/admin';
+                window.location.href = '/#admin';
             }
         }
         
