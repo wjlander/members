@@ -123,7 +123,7 @@ get_configuration() {
     echo -e "${BLUE}Admin User Configuration:${NC}"
     while [[ -z "$SUPERADMIN_EMAIL" ]]; do
         read -p "Enter super admin email address: " SUPERADMIN_EMAIL
-        if [[ ! "$ADMIN_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+        if [[ ! "$SUPERADMIN_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
             echo "Invalid email format. Please try again."
             SUPERADMIN_EMAIL=""
         fi
