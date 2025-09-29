@@ -121,34 +121,34 @@ get_configuration() {
     
     # Admin user configuration
     echo -e "${BLUE}Admin User Configuration:${NC}"
-    while [[ -z "$ADMIN_EMAIL" ]]; do
-        read -p "Enter admin email address: " ADMIN_EMAIL
+    while [[ -z "$SUPERADMIN_EMAIL" ]]; do
+        read -p "Enter super admin email address: " SUPERADMIN_EMAIL
         if [[ ! "$ADMIN_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
             echo "Invalid email format. Please try again."
-            ADMIN_EMAIL=""
+            SUPERADMIN_EMAIL=""
         fi
     done
     
-    while [[ -z "$ADMIN_PASSWORD" ]]; do
-        read -s -p "Enter admin password (minimum 8 characters): " ADMIN_PASSWORD
+    while [[ -z "$SUPERADMIN_PASSWORD" ]]; do
+        read -s -p "Enter super admin password (minimum 8 characters): " SUPERADMIN_PASSWORD
         echo
-        if [[ ${#ADMIN_PASSWORD} -lt 8 ]]; then
+        if [[ ${#SUPERADMIN_PASSWORD} -lt 8 ]]; then
             echo "Password must be at least 8 characters long."
-            ADMIN_PASSWORD=""
+            SUPERADMIN_PASSWORD=""
         fi
     done
     
-    read -s -p "Confirm admin password: " ADMIN_PASSWORD_CONFIRM
+    read -s -p "Confirm super admin password: " SUPERADMIN_PASSWORD_CONFIRM
     echo
-    if [[ "$ADMIN_PASSWORD" != "$ADMIN_PASSWORD_CONFIRM" ]]; then
+    if [[ "$SUPERADMIN_PASSWORD" != "$SUPERADMIN_PASSWORD_CONFIRM" ]]; then
         echo "Passwords do not match. Please try again."
-        ADMIN_PASSWORD=""
+        SUPERADMIN_PASSWORD=""
         get_configuration
         return
     fi
     
-    read -p "Enter admin name (default: System Administrator): " ADMIN_NAME
-    ADMIN_NAME=${ADMIN_NAME:-"System Administrator"}
+    read -p "Enter super admin name (default: Super Administrator): " SUPERADMIN_NAME
+    SUPERADMIN_NAME=${SUPERADMIN_NAME:-"Super Administrator"}
     
     echo -e "${BLUE}Configuration Summary:${NC}"
     echo "Database: $DB_NAME"
@@ -156,8 +156,8 @@ get_configuration() {
     echo "Main Domain: $MAIN_DOMAIN"
     echo "Admin Domain: $ADMIN_DOMAIN"
     echo "Resend API: $([ -n "$RESEND_API_KEY" ] && echo "Configured" || echo "Not configured")"
-    echo "Admin Email: $ADMIN_EMAIL"
-    echo "Admin Name: $ADMIN_NAME"
+    echo "Super Admin Email: $SUPERADMIN_EMAIL"
+    echo "Super Admin Name: $SUPERADMIN_NAME"
     
     read -p "Continue with this configuration? (y/N): " confirm
     if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
@@ -312,44 +312,77 @@ run_database_migrations() {
         fi
     done
     
-    # Create first admin user
-    log "Creating first admin user..."
+    # Create first super admin user
+    log "Creating first super admin user..."
     sudo -u postgres psql -d "$DB_NAME" << EOF
 -- Create first association if none exists
 INSERT INTO associations (name, code, description, status) 
 VALUES ('Default Association', 'DEFAULT', 'Initial association for setup', 'active')
 ON CONFLICT (code) DO NOTHING;
 
--- Create first admin user
+-- Create first super admin user
+DO \$\$
+DECLARE
+    superadmin_user_id UUID;
+BEGIN
+    -- Create super admin user (no association required)
+    INSERT INTO users (email, password_hash, name, role, association_id)
+    VALUES (
+        '$SUPERADMIN_EMAIL',
+        crypt('$SUPERADMIN_PASSWORD', gen_salt('bf')),
+        '$SUPERADMIN_NAME',
+        'super_admin',
+        NULL  -- No association required for super admin
+    ) RETURNING id INTO superadmin_user_id;
+    
+    RAISE NOTICE 'Super admin user created successfully with email: $SUPERADMIN_EMAIL';
+    RAISE NOTICE 'User ID: %', superadmin_user_id;
+END \$\$;
+
+-- Verify the super admin user was created
+DO \$\$
+BEGIN
+    IF EXISTS (SELECT 1 FROM users WHERE role = 'super_admin' AND email = '$SUPERADMIN_EMAIL') THEN
+        RAISE NOTICE 'Super admin verification: SUCCESS';
+    ELSE
+        RAISE EXCEPTION 'Super admin verification: FAILED';
+    END IF;
+END \$\$;
+EOF
+    
+    # Also create a sample association admin for demonstration
+    log "Creating sample association admin..."
+    sudo -u postgres psql -d "$DB_NAME" << EOF
+-- Create sample association admin
 DO \$\$
 DECLARE
     assoc_id UUID;
     admin_user_id UUID;
 BEGIN
-    -- Get the first association ID
-    SELECT id INTO assoc_id FROM associations LIMIT 1;
+    -- Get the default association ID
+    SELECT id INTO assoc_id FROM associations WHERE code = 'DEFAULT' LIMIT 1;
     
-    -- Create admin user
+    -- Create association admin user
     INSERT INTO users (email, password_hash, name, role, association_id)
     VALUES (
-        '$ADMIN_EMAIL',
-        crypt('$ADMIN_PASSWORD', gen_salt('bf')),
-        '$ADMIN_NAME',
+        'admin@default.org',
+        crypt('admin123', gen_salt('bf')),
+        'Association Administrator',
         'admin',
         assoc_id
     ) RETURNING id INTO admin_user_id;
     
-    -- Create corresponding member record
+    -- Create corresponding member record for the admin
     INSERT INTO members (user_id, association_id, name, email, status)
     VALUES (
         admin_user_id,
         assoc_id,
-        '$ADMIN_NAME',
-        '$ADMIN_EMAIL',
+        'Association Administrator',
+        'admin@default.org',
         'active'
     );
     
-    RAISE NOTICE 'Admin user created successfully with email: $ADMIN_EMAIL';
+    RAISE NOTICE 'Sample association admin created: admin@default.org / admin123';
 END \$\$;
 EOF
     
@@ -467,6 +500,9 @@ BCRYPT_ROUNDS=12
 JWT_EXPIRES_IN=24h
 RATE_LIMIT_WINDOW=15
 RATE_LIMIT_MAX=100
+
+# Initial Super Admin (for reference)
+INITIAL_SUPERADMIN_EMAIL=$SUPERADMIN_EMAIL
 EOF
 
     chmod 600 "$APP_DIR/.env"
@@ -1008,16 +1044,22 @@ main() {
     echo "- Setup Info: $APP_DIR/SETUP_INFO.md"
     echo "- Database Password: $DB_PASSWORD"
     echo
+    echo -e "${BLUE}Login Credentials:${NC}"
+    echo "- Super Admin Email: $SUPERADMIN_EMAIL"
+    echo "- Super Admin Password: $SUPERADMIN_PASSWORD"
+    echo "- Sample Association Admin: admin@default.org / admin123"
+    echo
     echo -e "${BLUE}Next Steps:${NC}"
     echo "1. Configure DNS to point both domains to this server's IP"
     echo "2. Run SSL setup: sudo certbot --nginx -d $MAIN_DOMAIN -d $ADMIN_DOMAIN"
     echo "3. Access the main system: https://$MAIN_DOMAIN/"
     echo "4. Access the admin panel: https://$ADMIN_DOMAIN/"
-    echo "5. Complete the initial setup and create your first admin user"
+    echo "5. Login as super admin to manage associations and create more admins"
     echo
     echo -e "${YELLOW}Security Reminder:${NC}"
     echo "- Database password: $DB_PASSWORD"
-    echo "- Save this password in a secure location!"
+    echo "- Super admin password: $SUPERADMIN_PASSWORD"
+    echo "- Save these passwords in a secure location!"
     echo "- Configuration file: $APP_DIR/.env (mode 600)"
     echo
     echo -e "${BLUE}Support:${NC}"
