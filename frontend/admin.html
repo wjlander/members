@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Member Management System</title>
+    <title>Admin Portal - Member Management System</title>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -11,115 +11,228 @@
         [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="bg-red-50">
-    <div class="min-h-screen flex items-center justify-center">
-        <div class="max-w-md w-full space-y-8">
-            <div class="text-center">
-                <i class="fas fa-shield-alt text-6xl text-red-600 mb-4"></i>
-                <h2 class="text-3xl font-bold text-red-900">Admin Panel</h2>
-                <p class="mt-2 text-sm text-red-700">Member Management System Administration</p>
-            </div>
-            <div class="bg-white p-8 rounded-lg shadow-md border-2 border-red-200">
-                <h3 class="text-lg font-medium mb-4 text-red-800">Administrator Access</h3>
-                <div class="space-y-4">
-                    <div class="bg-red-100 p-4 rounded-lg">
-                        <h4 class="font-semibold text-red-800 mb-2">
-                            <i class="fas fa-check-circle mr-2"></i>
-                            Admin Domain Active
-                        </h4>
-                        <p class="text-sm text-red-700">
-                            You are accessing the admin interface at <strong>p.ringing.org.uk</strong>
-                        </p>
-                    </div>
-                    
-                    <div class="space-y-2">
-                        <div class="flex items-center text-green-600">
-                            <i class="fas fa-check-circle mr-2"></i>
-                            <span class="text-sm">Admin Interface: Active</span>
-                        </div>
-                        <div class="flex items-center text-green-600">
-                            <i class="fas fa-check-circle mr-2"></i>
-                            <span class="text-sm">Database: Connected</span>
-                        </div>
-                        <div class="flex items-center text-green-600">
-                            <i class="fas fa-check-circle mr-2"></i>
-                            <span class="text-sm">Authentication: Ready</span>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <h4 class="font-semibold text-yellow-800 mb-2">
-                            <i class="fas fa-info-circle mr-2"></i>
-                            Setup Required
-                        </h4>
-                        <p class="text-sm text-yellow-700 mb-3">
-                            Complete the initial setup to access full admin features:
-                        </p>
-                        <ol class="text-sm text-yellow-700 space-y-1">
-                            <li>1. Create your first admin user</li>
-                            <li>2. Configure association settings</li>
-                            <li>3. Set up email integration</li>
-                            <li>4. Import member data (if applicable)</li>
-                        </ol>
-                    </div>
-                    
-                    <div class="mt-6">
-                        <button onclick="accessAdminPanel()" class="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
-                            <i class="fas fa-sign-in-alt mr-2"></i>
-                            Access Admin Panel
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="mt-6 pt-4 border-t border-gray-200">
-                    <p class="text-xs text-gray-500 text-center">
-                        Admin interface for Member Management System<br>
-                        <a href="https://member.ringing.org.uk" class="text-red-600 hover:text-red-800">
-                            ← Back to Member Portal
-                        </a>
-                    </p>
-                </div>
+<body class="bg-gradient-to-br from-red-50 to-orange-50 min-h-screen" x-data="adminApp()" x-init="init()">
+    <!-- Loading Screen -->
+    <div x-show="loading" x-cloak class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-spinner fa-spin text-red-600"></i>
+                <span>Loading...</span>
             </div>
         </div>
     </div>
-    
+
+    <!-- Error/Success Messages -->
+    <div x-show="error" x-cloak class="fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50 max-w-md">
+        <span x-text="error"></span>
+        <button @click="error = ''" class="ml-2 text-red-700 hover:text-red-900">×</button>
+    </div>
+
+    <div x-show="success" x-cloak class="fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50 max-w-md">
+        <span x-text="success"></span>
+        <button @click="success = ''" class="ml-2 text-green-700 hover:text-green-900">×</button>
+    </div>
+
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="max-w-md w-full space-y-8">
+            <!-- Header -->
+            <div class="text-center">
+                <div class="mx-auto h-20 w-20 bg-red-600 rounded-full flex items-center justify-center mb-6">
+                    <i class="fas fa-shield-alt text-3xl text-white"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-red-900">Admin Portal</h2>
+                <p class="mt-2 text-sm text-red-700">System Administration Access</p>
+            </div>
+
+            <!-- Admin Login Card -->
+            <div class="bg-white p-8 rounded-xl shadow-lg border-2 border-red-100">
+                <div x-show="!currentUser">
+                    <h3 class="text-xl font-semibold mb-6 text-center text-red-800">Administrator Login</h3>
+                    
+                    <form @submit.prevent="login()">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                                <input type="email" x-model="loginForm.email" required
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                                <input type="password" x-model="loginForm.password" required
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Association</label>
+                                <select x-model="loginForm.association_id" required
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                                    <option value="">Select Association</option>
+                                    <template x-for="assoc in associations" :key="assoc.id">
+                                        <option :value="assoc.id" x-text="assoc.name"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            
+                            <button type="submit" :disabled="loading"
+                                    class="w-full bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium">
+                                <span x-show="!loading">Admin Sign In</span>
+                                <span x-show="loading" class="flex items-center justify-center">
+                                    <i class="fas fa-spinner fa-spin mr-2"></i>
+                                    Signing In...
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Admin Dashboard (shown after login) -->
+                <div x-show="currentUser" x-cloak>
+                    <div class="text-center mb-6">
+                        <h3 class="text-xl font-semibold text-red-800">Admin Dashboard</h3>
+                        <p class="text-gray-600" x-text="currentUser?.name"></p>
+                        <p class="text-sm text-gray-500" x-text="currentUser?.association_name"></p>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <button @click="currentView = 'members'" 
+                                class="w-full text-left px-4 py-3 rounded-lg hover:bg-red-50 flex items-center">
+                            <i class="fas fa-users mr-3 text-red-600"></i>
+                            <span>Manage Members</span>
+                        </button>
+                        
+                        <button @click="currentView = 'associations'" 
+                                class="w-full text-left px-4 py-3 rounded-lg hover:bg-red-50 flex items-center">
+                            <i class="fas fa-building mr-3 text-red-600"></i>
+                            <span>Association Settings</span>
+                        </button>
+                        
+                        <button @click="currentView = 'reports'" 
+                                class="w-full text-left px-4 py-3 rounded-lg hover:bg-red-50 flex items-center">
+                            <i class="fas fa-chart-bar mr-3 text-red-600"></i>
+                            <span>Reports & Analytics</span>
+                        </button>
+                        
+                        <button @click="currentView = 'email'" 
+                                class="w-full text-left px-4 py-3 rounded-lg hover:bg-red-50 flex items-center">
+                            <i class="fas fa-envelope mr-3 text-red-600"></i>
+                            <span>Email Campaigns</span>
+                        </button>
+                        
+                        <button @click="logout()" 
+                                class="w-full text-left px-4 py-3 rounded-lg hover:bg-red-50 flex items-center text-red-600">
+                            <i class="fas fa-sign-out-alt mr-3"></i>
+                            <span>Sign Out</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="text-center">
+                <p class="text-xs text-gray-500">
+                    Secure admin access for Member Management System
+                </p>
+            </div>
+        </div>
+    </div>
+
     <script>
-        function accessAdminPanel() {
-            // Check if we're on the admin domain
-            const currentHost = window.location.host;
-            
-            if (currentHost.includes('p.ringing.org.uk')) {
-                // We're on the admin domain, redirect to the main member interface with admin access
-                window.location.href = 'https://member.ringing.org.uk/#admin';
-            } else {
-                // Fallback - try to access admin interface on current domain
-                window.location.href = '/#admin';
-            }
-        }
-        
-        // Auto-detect system status
-        document.addEventListener('DOMContentLoaded', function() {
-            // Test if the backend is responding
-            fetch('/health')
-                .then(response => response.json())
-                .then(data => {
-                    console.log('System health:', data);
-                    // Update status indicators if needed
-                })
-                .catch(error => {
-                    console.log('Backend not responding via /health, trying /api/health');
-                    return fetch('/api/health');
-                })
-                .then(response => response ? response.json() : null)
-                .then(data => {
-                    if (data) {
-                        console.log('API health:', data);
+        function adminApp() {
+            return {
+                loading: false,
+                error: '',
+                success: '',
+                currentUser: null,
+                currentView: 'dashboard',
+                associations: [],
+                
+                loginForm: {
+                    email: '',
+                    password: '',
+                    association_id: ''
+                },
+
+                async init() {
+                    // Check for existing auth
+                    const token = localStorage.getItem('auth_token');
+                    if (token) {
+                        await this.checkAuth();
                     }
-                })
-                .catch(error => {
-                    console.warn('Health check failed:', error);
-                });
-        });
+                    
+                    // Load associations
+                    await this.loadAssociations();
+                },
+
+                async loadAssociations() {
+                    try {
+                        const response = await fetch('/api/associations');
+                        if (response.ok) {
+                            this.associations = await response.json();
+                        }
+                    } catch (error) {
+                        console.error('Failed to load associations:', error);
+                    }
+                },
+
+                async checkAuth() {
+                    try {
+                        const token = localStorage.getItem('auth_token');
+                        const response = await fetch('/api/auth/me', {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        
+                        if (response.ok) {
+                            const user = await response.json();
+                            if (user.role === 'admin' || user.role === 'super_admin') {
+                                this.currentUser = user;
+                            } else {
+                                localStorage.removeItem('auth_token');
+                                this.error = 'Admin access required';
+                            }
+                        } else {
+                            localStorage.removeItem('auth_token');
+                        }
+                    } catch (error) {
+                        localStorage.removeItem('auth_token');
+                    }
+                },
+
+                async login() {
+                    this.loading = true;
+                    this.error = '';
+                    
+                    try {
+                        const response = await fetch('/api/auth/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.loginForm)
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok && (data.user.role === 'admin' || data.user.role === 'super_admin')) {
+                            localStorage.setItem('auth_token', data.token);
+                            this.currentUser = data.user;
+                            this.success = 'Admin login successful!';
+                            this.loginForm = { email: '', password: '', association_id: '' };
+                        } else {
+                            this.error = data.error || 'Admin access denied';
+                        }
+                    } catch (error) {
+                        this.error = 'Network error. Please try again.';
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                logout() {
+                    localStorage.removeItem('auth_token');
+                    this.currentUser = null;
+                    this.success = 'Logged out successfully';
+                }
+            };
+        }
     </script>
 </body>
 </html>
