@@ -12,34 +12,64 @@
     </style>
 </head>
 <body class="bg-gray-50">
-    <div x-data="app()" x-cloak>
-        <!-- Navigation -->
-        <nav class="bg-white shadow-lg" x-show="currentUser">
-            <div class="max-w-7xl mx-auto px-4">
-                <div class="flex justify-between items-center py-4">
-                    <div class="flex items-center space-x-4">
-                        <h1 class="text-xl font-bold text-gray-800">
-                            <i class="fas fa-users text-blue-600"></i>
-                            Member Management
-                        </h1>
-                        <span x-text="currentAssociation?.name" class="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded"></span>
+    <div x-data="memberApp()" x-init="init()" x-cloak>
+        <!-- Loading Screen -->
+        <div x-show="loading" class="min-h-screen flex items-center justify-center">
+            <div class="text-center">
+                <i class="fas fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
+                <p class="text-gray-600">Loading Member Management System...</p>
+            </div>
+        </div>
+
+        <!-- Login/Welcome Screen -->
+        <div x-show="!loading && !currentUser" class="min-h-screen flex items-center justify-center py-12 px-4">
+            <div class="max-w-md w-full space-y-8">
+                <div class="text-center">
+                    <i class="fas fa-users text-6xl text-blue-600 mb-4"></i>
+                    <h2 class="text-3xl font-bold text-gray-900">Member Management System</h2>
+                    <p class="mt-2 text-sm text-gray-600">Professional member and association management</p>
+                </div>
+                
+                <div class="bg-white p-8 rounded-lg shadow-md">
+                    <div class="space-y-4">
+                        <div class="text-center">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">System Status</h3>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex items-center justify-center">
+                                    <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                    <span>Application Server: Running</span>
+                                </div>
+                                <div class="flex items-center justify-center">
+                                    <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                    <span>Database: Connected</span>
+                                </div>
+                                <div class="flex items-center justify-center">
+                                    <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                    <span>Frontend: Loaded</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="border-t pt-4">
+                            <div class="space-y-3">
+                                <button @click="showLogin = true" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                                    <i class="fas fa-sign-in-alt mr-2"></i>
+                                    Member Login
+                                </button>
+                                
+                                <button @click="showAdminLogin = true" class="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
+                                    <i class="fas fa-shield-alt mr-2"></i>
+                                    Admin Access
+                                </button>
+                                
+                                <div class="text-center">
+                                    <button @click="showRegister = true" class="text-sm text-blue-600 hover:text-blue-800">
+                                        New member? Register here
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex items-center space-x-4">
-                        <template x-if="currentUser?.role === 'admin'">
-                            <div class="flex space-x-2">
-                                <button @click="currentView = 'members'" 
-                                        :class="currentView === 'members' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-blue-600'"
-                                        class="px-3 py-2 rounded transition-colors">
-                                    <i class="fas fa-users mr-1"></i> Members
-                                </button>
-                                <button @click="currentView = 'settings'" 
-                                        :class="currentView === 'settings' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-blue-600'"
-                                        class="px-3 py-2 rounded transition-colors">
-                                    <i class="fas fa-cog mr-1"></i> Settings
-                                </button>
-                                <button @click="currentView = 'reports'" 
-                                        :class="currentView === 'reports' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-blue-600'"
-                                        class="px-3 py-2 rounded transition-colors">
                                     <i class="fas fa-chart-bar mr-1"></i> Reports
                                 </button>
                             </div>
@@ -632,8 +662,313 @@
                 </button>
             </div>
         </div>
-    </div>
 
+        <!-- Login Modal -->
+        <div x-show="showLogin" x-cloak class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">Member Login</h3>
+                        <button @click="showLogin = false" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <form @submit.prevent="login()" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Email</label>
+                            <input x-model="loginForm.email" type="email" required
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Password</label>
+                            <input x-model="loginForm.password" type="password" required
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        
+                        <div class="flex justify-end space-x-3 pt-4">
+                            <button type="button" @click="showLogin = false"
+                                    class="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">
+                                Cancel
+                            </button>
+                            <button type="submit" :disabled="loading"
+                                    class="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">
+                                <span x-show="!loading">Login</span>
+                                <span x-show="loading">
+                                    <i class="fas fa-spinner fa-spin mr-1"></i>
+                                    Logging in...
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Login Modal -->
+        <div x-show="showAdminLogin" x-cloak class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div class="mt-3">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">Admin Login</h3>
+                        <button @click="showAdminLogin = false" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <form @submit.prevent="adminLogin()" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Admin Email</label>
+                            <input x-model="adminLoginForm.email" type="email" required
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Password</label>
+                            <input x-model="adminLoginForm.password" type="password" required
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
+                        </div>
+                        
+                        <div class="flex justify-end space-x-3 pt-4">
+                            <button type="button" @click="showAdminLogin = false"
+                                    class="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">
+                                Cancel
+                            </button>
+                            <button type="submit" :disabled="loading"
+                                    class="px-4 py-2 text-sm text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50">
+                                <span x-show="!loading">Admin Login</span>
+                                <span x-show="loading">
+                                    <i class="fas fa-spinner fa-spin mr-1"></i>
+                                    Logging in...
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+        <!-- Main Application (when logged in) -->
+        <div x-show="!loading && currentUser" class="min-h-screen bg-gray-50">
+            <nav class="bg-white shadow-lg">
+                <div class="max-w-7xl mx-auto px-4">
+                    <div class="flex justify-between items-center py-4">
+                        <div class="flex items-center space-x-4">
+                            <h1 class="text-xl font-bold text-gray-800">
+                                <i class="fas fa-users text-blue-600"></i>
+                                Member Management
+                            </h1>
+                            <span x-text="currentUser?.association_name" class="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded"></span>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <span class="text-sm text-gray-600" x-text="currentUser?.name"></span>
+                            <button @click="logout()" class="text-red-600 hover:text-red-800 transition-colors">
+                                <i class="fas fa-sign-out-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+                </div>
+            <main class="max-w-7xl mx-auto py-6 px-4">
+                <div class="bg-white shadow rounded-lg p-6">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">
+                        Welcome, <span x-text="currentUser?.name"></span>!
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-user text-blue-600 text-2xl mr-3"></i>
+                                <div>
+                                    <h3 class="font-semibold text-blue-900">Profile</h3>
+                                    <p class="text-sm text-blue-700">Manage your information</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-green-50 p-4 rounded-lg" x-show="currentUser?.role === 'admin'">
+                            <div class="flex items-center">
+                                <i class="fas fa-users text-green-600 text-2xl mr-3"></i>
+                                <div>
+                                    <h3 class="font-semibold text-green-900">Members</h3>
+                                    <p class="text-sm text-green-700">Manage association members</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-purple-50 p-4 rounded-lg" x-show="currentUser?.role === 'admin'">
+                            <div class="flex items-center">
+                                <i class="fas fa-envelope text-purple-600 text-2xl mr-3"></i>
+                                <div>
+                                    <h3 class="font-semibold text-purple-900">Communications</h3>
+                                    <p class="text-sm text-purple-700">Email and announcements</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <h4 class="font-semibold text-yellow-800 mb-2">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            System Information
+                        </h4>
+                        <p class="text-sm text-yellow-700">
+                            You are logged in as <strong x-text="currentUser?.role"></strong> 
+                            for <strong x-text="currentUser?.association_name"></strong>.
+                        </p>
+                    </div>
+                </div>
+            </main>
+        </div>
+            </div>
+        <!-- Error Messages -->
+        <div x-show="error" x-transition class="fixed bottom-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-exclamation-circle"></i>
+                <span x-text="error"></span>
+                <button @click="error = ''" class="ml-2 text-white hover:text-gray-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        </div>
+        <!-- Success Messages -->
+        <div x-show="success" x-transition class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-check-circle"></i>
+                <span x-text="success"></span>
+                <button @click="success = ''" class="ml-2 text-white hover:text-gray-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </div>
     <script src="js/app.js"></script>
+    <script>
+        function memberApp() {
+            return {
+                loading: true,
+                error: '',
+                success: '',
+                currentUser: null,
+                showLogin: false,
+                showAdminLogin: false,
+                showRegister: false,
+                
+                loginForm: {
+                    email: '',
+                    password: ''
+                },
+                
+                adminLoginForm: {
+                    email: '',
+                    password: ''
+                },
+                
+                async init() {
+                    try {
+                        // Check if user is already logged in
+                        const token = localStorage.getItem('auth_token');
+                        if (token) {
+                            await this.checkAuthStatus();
+                        }
+                    } catch (error) {
+                        console.error('Init error:', error);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                async checkAuthStatus() {
+                    try {
+                        const response = await fetch('/api/auth/me', {
+                            headers: {
+                                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            this.currentUser = await response.json();
+                        } else {
+                            localStorage.removeItem('auth_token');
+                        }
+                    } catch (error) {
+                        console.error('Auth check error:', error);
+                        localStorage.removeItem('auth_token');
+                    }
+                },
+                
+                async login() {
+                    this.loading = true;
+                    try {
+                        const response = await fetch('/api/auth/login', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(this.loginForm)
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok) {
+                            localStorage.setItem('auth_token', data.token);
+                            this.currentUser = data.user;
+                            this.showLogin = false;
+                            this.showSuccess('Login successful!');
+                        } else {
+                            this.showError(data.error || 'Login failed');
+                        }
+                    } catch (error) {
+                        this.showError('Login failed. Please try again.');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                async adminLogin() {
+                    this.loading = true;
+                    try {
+                        const response = await fetch('/api/auth/login', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(this.adminLoginForm)
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok && (data.user.role === 'admin' || data.user.role === 'super_admin')) {
+                            localStorage.setItem('auth_token', data.token);
+                            this.currentUser = data.user;
+                            this.showAdminLogin = false;
+                            this.showSuccess('Admin login successful!');
+                        } else {
+                            this.showError(data.error || 'Admin login failed');
+                        }
+                    } catch (error) {
+                        this.showError('Admin login failed. Please try again.');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                
+                logout() {
+                    localStorage.removeItem('auth_token');
+                    this.currentUser = null;
+                    this.showSuccess('Logged out successfully');
+                },
+                
+                showError(message) {
+                    this.error = message;
+                    setTimeout(() => this.error = '', 5000);
+                },
+                
+                showSuccess(message) {
+                    this.success = message;
+                    setTimeout(() => this.success = '', 5000);
+                }
+            };
+        }
+    </script>
 </body>
 </html>

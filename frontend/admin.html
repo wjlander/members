@@ -64,7 +64,7 @@
                     </div>
                     
                     <div class="mt-6">
-                        <button class="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
+                        <button onclick="accessAdminPanel()" class="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
                             <i class="fas fa-sign-in-alt mr-2"></i>
                             Access Admin Panel
                         </button>
@@ -82,5 +82,44 @@
             </div>
         </div>
     </div>
+    
+    <script>
+        function accessAdminPanel() {
+            // Check if we're on the admin domain
+            const currentHost = window.location.host;
+            
+            if (currentHost.includes('p.ringing.org.uk')) {
+                // We're on the admin domain, redirect to the main member interface with admin access
+                window.location.href = 'https://member.ringing.org.uk/admin';
+            } else {
+                // Fallback - try to access admin interface on current domain
+                window.location.href = '/admin';
+            }
+        }
+        
+        // Auto-detect system status
+        document.addEventListener('DOMContentLoaded', function() {
+            // Test if the backend is responding
+            fetch('/health')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('System health:', data);
+                    // Update status indicators if needed
+                })
+                .catch(error => {
+                    console.log('Backend not responding via /health, trying /api/health');
+                    return fetch('/api/health');
+                })
+                .then(response => response ? response.json() : null)
+                .then(data => {
+                    if (data) {
+                        console.log('API health:', data);
+                    }
+                })
+                .catch(error => {
+                    console.warn('Health check failed:', error);
+                });
+        });
+    </script>
 </body>
 </html>
