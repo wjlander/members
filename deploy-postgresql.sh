@@ -119,12 +119,45 @@ get_configuration() {
     echo -e "${BLUE}Email Configuration:${NC}"
     read -p "Enter Resend API key (optional, press Enter to skip): " RESEND_API_KEY
     
+    # Admin user configuration
+    echo -e "${BLUE}Admin User Configuration:${NC}"
+    while [[ -z "$ADMIN_EMAIL" ]]; do
+        read -p "Enter admin email address: " ADMIN_EMAIL
+        if [[ ! "$ADMIN_EMAIL" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$ ]]; then
+            echo "Invalid email format. Please try again."
+            ADMIN_EMAIL=""
+        fi
+    done
+    
+    while [[ -z "$ADMIN_PASSWORD" ]]; do
+        read -s -p "Enter admin password (minimum 8 characters): " ADMIN_PASSWORD
+        echo
+        if [[ ${#ADMIN_PASSWORD} -lt 8 ]]; then
+            echo "Password must be at least 8 characters long."
+            ADMIN_PASSWORD=""
+        fi
+    done
+    
+    read -s -p "Confirm admin password: " ADMIN_PASSWORD_CONFIRM
+    echo
+    if [[ "$ADMIN_PASSWORD" != "$ADMIN_PASSWORD_CONFIRM" ]]; then
+        echo "Passwords do not match. Please try again."
+        ADMIN_PASSWORD=""
+        get_configuration
+        return
+    fi
+    
+    read -p "Enter admin name (default: System Administrator): " ADMIN_NAME
+    ADMIN_NAME=${ADMIN_NAME:-"System Administrator"}
+    
     echo -e "${BLUE}Configuration Summary:${NC}"
     echo "Database: $DB_NAME"
     echo "Database User: $DB_USER"
     echo "Main Domain: $MAIN_DOMAIN"
     echo "Admin Domain: $ADMIN_DOMAIN"
     echo "Resend API: $([ -n "$RESEND_API_KEY" ] && echo "Configured" || echo "Not configured")"
+    echo "Admin Email: $ADMIN_EMAIL"
+    echo "Admin Name: $ADMIN_NAME"
     
     read -p "Continue with this configuration? (y/N): " confirm
     if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
@@ -278,6 +311,47 @@ run_database_migrations() {
             sudo -u postgres psql -d "$DB_NAME" -f "$migration_file"
         fi
     done
+    
+    # Create first admin user
+    log "Creating first admin user..."
+    sudo -u postgres psql -d "$DB_NAME" << EOF
+-- Create first association if none exists
+INSERT INTO associations (name, code, description, status) 
+VALUES ('Default Association', 'DEFAULT', 'Initial association for setup', 'active')
+ON CONFLICT (code) DO NOTHING;
+
+-- Create first admin user
+DO \$\$
+DECLARE
+    assoc_id UUID;
+    admin_user_id UUID;
+BEGIN
+    -- Get the first association ID
+    SELECT id INTO assoc_id FROM associations LIMIT 1;
+    
+    -- Create admin user
+    INSERT INTO users (email, password_hash, name, role, association_id)
+    VALUES (
+        '$ADMIN_EMAIL',
+        crypt('$ADMIN_PASSWORD', gen_salt('bf')),
+        '$ADMIN_NAME',
+        'admin',
+        assoc_id
+    ) RETURNING id INTO admin_user_id;
+    
+    -- Create corresponding member record
+    INSERT INTO members (user_id, association_id, name, email, status)
+    VALUES (
+        admin_user_id,
+        assoc_id,
+        '$ADMIN_NAME',
+        '$ADMIN_EMAIL',
+        'active'
+    );
+    
+    RAISE NOTICE 'Admin user created successfully with email: $ADMIN_EMAIL';
+END \$\$;
+EOF
     
     log "Database migrations completed"
 }

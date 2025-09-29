@@ -113,6 +113,20 @@ app.get('/', (req, res) => {
     }
 });
 
+// Association-specific login page
+app.get('/association', (req, res) => {
+    const associationPath = path.join(__dirname, 'frontend', 'association.html');
+    
+    if (fs.existsSync(associationPath)) {
+        res.sendFile(associationPath);
+    } else {
+        logger.error('Association frontend file not found at:', associationPath);
+        res.status(500).json({ 
+            error: 'Association frontend file not found',
+            path: associationPath
+        });
+    }
+});
 // Admin interface
 app.get('/admin*', (req, res) => {
     const host = req.get('host') || '';

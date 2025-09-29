@@ -61,6 +61,29 @@ router.get('/current', authenticateToken, async (req, res) => {
     }
 });
 
+// Get association by code (public endpoint for login pages)
+router.get('/by-code/:code', async (req, res) => {
+    try {
+        const result = await db.query(`
+            SELECT 
+                a.*,
+                COUNT(m.id) as member_count
+            FROM associations a
+            LEFT JOIN members m ON a.id = m.association_id
+            WHERE a.code = $1 AND a.status = 'active'
+            GROUP BY a.id
+        `, [req.params.code]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Association not found' });
+        }
+
+        res.json(result.rows[0]);
+    } catch (error) {
+        logger.error('Error fetching association by code:', error);
+        res.status(500).json({ error: 'Failed to fetch association' });
+    }
+});
 // Get single association
 router.get('/:id', authenticateToken, async (req, res) => {
     try {

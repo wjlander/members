@@ -11,257 +11,81 @@
         [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="bg-gray-50" x-data="memberApp()" x-init="init()">
-    <!-- Loading Screen -->
-    <div x-show="loading" x-cloak class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-lg shadow-lg">
-            <div class="flex items-center space-x-3">
-                <i class="fas fa-spinner fa-spin text-blue-600"></i>
-                <span>Loading...</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Error/Success Messages -->
-    <div x-show="error" x-cloak class="fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50">
-        <span x-text="error"></span>
-        <button @click="error = ''" class="ml-2 text-red-700 hover:text-red-900">×</button>
-    </div>
-
-    <div x-show="success" x-cloak class="fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50">
-        <span x-text="success"></span>
-        <button @click="success = ''" class="ml-2 text-green-700 hover:text-green-900">×</button>
-    </div>
-
-    <!-- Main Content -->
+<body class="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen" x-data="systemApp()" x-init="init()">
     <div class="min-h-screen flex items-center justify-center p-4">
-        <div class="max-w-md w-full space-y-8">
+        <div class="max-w-2xl w-full space-y-8">
             <!-- Header -->
             <div class="text-center">
-                <i class="fas fa-users text-6xl text-blue-600 mb-4"></i>
-                <h2 class="text-3xl font-bold text-gray-900">Member Management System</h2>
-                <p class="mt-2 text-sm text-gray-600">Professional member and association management</p>
+                <div class="mx-auto h-24 w-24 bg-blue-600 rounded-full flex items-center justify-center mb-6">
+                    <i class="fas fa-users text-4xl text-white"></i>
+                </div>
+                <h1 class="text-4xl font-bold text-gray-900 mb-2">Member Management System</h1>
+                <p class="text-lg text-gray-600">Professional association and member management</p>
             </div>
 
-            <!-- System Status Card -->
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h3 class="text-lg font-medium mb-4 text-center">System Status</h3>
-                <div class="space-y-3">
-                    <div class="flex items-center justify-center">
+            <!-- Associations List -->
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Select Your Association</h2>
+                
+                <div x-show="loading" class="text-center py-8">
+                    <i class="fas fa-spinner fa-spin text-2xl text-blue-600"></i>
+                    <p class="mt-2 text-gray-600">Loading associations...</p>
+                </div>
+
+                <div x-show="!loading" class="space-y-4">
+                    <template x-for="association in associations" :key="association.id">
+                        <div class="border border-gray-200 rounded-lg p-6 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer"
+                             @click="selectAssociation(association)">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-800" x-text="association.name"></h3>
+                                    <p class="text-gray-600 text-sm" x-text="association.description || 'Bell ringing association'"></p>
+                                    <div class="mt-2 flex items-center text-sm text-gray-500">
+                                        <i class="fas fa-users mr-1"></i>
+                                        <span x-text="association.member_count || 0"></span>
+                                        <span class="ml-1">members</span>
+                                    </div>
+                                </div>
+                                <div class="text-blue-600">
+                                    <i class="fas fa-arrow-right text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <div x-show="associations.length === 0 && !loading" class="text-center py-8 text-gray-500">
+                        <i class="fas fa-info-circle text-2xl mb-2"></i>
+                        <p>No associations found. Please contact your system administrator.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">System Status</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="flex items-center">
                         <i class="fas fa-check-circle text-green-500 mr-2"></i>
-                        <span>Application Server: Running</span>
+                        <span class="text-sm">Application: Running</span>
                     </div>
-                    <div class="flex items-center justify-center">
+                    <div class="flex items-center">
                         <i class="fas fa-check-circle text-green-500 mr-2"></i>
-                        <span>Database: Connected</span>
+                        <span class="text-sm">Database: Connected</span>
                     </div>
-                    <div class="flex items-center justify-center">
+                    <div class="flex items-center">
                         <i class="fas fa-check-circle text-green-500 mr-2"></i>
-                        <span>Frontend: Loaded</span>
-                    </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="mt-6 space-y-3">
-                    <button @click="showMemberLogin = true" 
-                            class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center">
-                        <i class="fas fa-sign-in-alt mr-2"></i>
-                        Member Login
-                    </button>
-                    
-                    <button @click="showAdminLogin = true" 
-                            class="w-full bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center">
-                        <i class="fas fa-shield-alt mr-2"></i>
-                        Admin Access
-                    </button>
-                    
-                    <div class="text-center">
-                        <a href="#" @click.prevent="showRegister = true" class="text-blue-600 hover:text-blue-800 text-sm">
-                            New member? Register here
-                        </a>
+                        <span class="text-sm">Frontend: Loaded</span>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Member Login Modal -->
-    <div x-show="showMemberLogin" x-cloak class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-medium">Member Login</h3>
-                <button @click="showMemberLogin = false" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <form @submit.prevent="memberLogin()">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" x-model="memberLoginForm.email" required
-                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Password</label>
-                        <input type="password" x-model="memberLoginForm.password" required
-                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Association</label>
-                        <select x-model="memberLoginForm.association_id" required
-                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                            <option value="">Select Association</option>
-                            <template x-for="assoc in associations" :key="assoc.id">
-                                <option :value="assoc.id" x-text="assoc.name"></option>
-                            </template>
-                        </select>
-                    </div>
-                    
-                    <button type="submit" :disabled="loading"
-                            class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50">
-                        <span x-show="!loading">Sign In</span>
-                        <span x-show="loading">Signing In...</span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Admin Login Modal -->
-    <div x-show="showAdminLogin" x-cloak class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-medium">Admin Login</h3>
-                <button @click="showAdminLogin = false" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <form @submit.prevent="adminLogin()">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" x-model="adminLoginForm.email" required
-                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Password</label>
-                        <input type="password" x-model="adminLoginForm.password" required
-                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Association</label>
-                        <select x-model="adminLoginForm.association_id" required
-                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
-                            <option value="">Select Association</option>
-                            <template x-for="assoc in associations" :key="assoc.id">
-                                <option :value="assoc.id" x-text="assoc.name"></option>
-                            </template>
-                        </select>
-                    </div>
-                    
-                    <button type="submit" :disabled="loading"
-                            class="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 disabled:opacity-50">
-                        <span x-show="!loading">Admin Sign In</span>
-                        <span x-show="loading">Signing In...</span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Registration Modal -->
-    <div x-show="showRegister" x-cloak class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4 max-h-screen overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-medium">Member Registration</h3>
-                <button @click="showRegister = false" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <form @submit.prevent="register()">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Full Name</label>
-                        <input type="text" x-model="registerForm.name" required
-                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" x-model="registerForm.email" required
-                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Phone (Optional)</label>
-                        <input type="tel" x-model="registerForm.phone"
-                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Password</label>
-                        <input type="password" x-model="registerForm.password" required minlength="8"
-                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Association</label>
-                        <select x-model="registerForm.association_id" required
-                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                            <option value="">Select Association</option>
-                            <template x-for="assoc in associations" :key="assoc.id">
-                                <option :value="assoc.id" x-text="assoc.name"></option>
-                            </template>
-                        </select>
-                    </div>
-                    
-                    <button type="submit" :disabled="loading"
-                            class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 disabled:opacity-50">
-                        <span x-show="!loading">Register</span>
-                        <span x-show="loading">Registering...</span>
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 
     <script>
-        function memberApp() {
+        function systemApp() {
             return {
-                loading: false,
-                error: '',
-                success: '',
-                showMemberLogin: false,
-                showAdminLogin: false,
-                showRegister: false,
+                loading: true,
                 associations: [],
-                
-                memberLoginForm: {
-                    email: '',
-                    password: '',
-                    association_id: ''
-                },
-                
-                adminLoginForm: {
-                    email: '',
-                    password: '',
-                    association_id: ''
-                },
-                
-                registerForm: {
-                    name: '',
-                    email: '',
-                    phone: '',
-                    password: '',
-                    association_id: ''
-                },
 
                 async init() {
                     await this.loadAssociations();
@@ -273,128 +97,18 @@
                         if (response.ok) {
                             this.associations = await response.json();
                         } else {
-                            // Fallback - create sample associations for demo
-                            this.associations = [
-                                { id: '1', name: 'Sample Bell Ringing Association' },
-                                { id: '2', name: 'Test Ringers Guild' }
-                            ];
+                            console.error('Failed to load associations');
                         }
                     } catch (error) {
-                        console.error('Failed to load associations:', error);
-                        // Fallback associations
-                        this.associations = [
-                            { id: '1', name: 'Sample Bell Ringing Association' },
-                            { id: '2', name: 'Test Ringers Guild' }
-                        ];
-                    }
-                },
-
-                async memberLogin() {
-                    this.loading = true;
-                    this.error = '';
-                    
-                    try {
-                        const response = await fetch('/api/auth/login', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(this.memberLoginForm)
-                        });
-
-                        const data = await response.json();
-
-                        if (response.ok) {
-                            localStorage.setItem('auth_token', data.token);
-                            localStorage.setItem('user_data', JSON.stringify(data.user));
-                            this.success = 'Login successful! Redirecting...';
-                            
-                            setTimeout(() => {
-                                window.location.href = '/dashboard';
-                            }, 1000);
-                        } else {
-                            this.error = data.error || 'Login failed';
-                        }
-                    } catch (error) {
-                        console.error('Login error:', error);
-                        this.error = 'Network error. Please try again.';
+                        console.error('Error loading associations:', error);
                     } finally {
                         this.loading = false;
                     }
                 },
 
-                async adminLogin() {
-                    this.loading = true;
-                    this.error = '';
-                    
-                    try {
-                        const response = await fetch('/api/auth/login', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(this.adminLoginForm)
-                        });
-
-                        const data = await response.json();
-
-                        if (response.ok && (data.user.role === 'admin' || data.user.role === 'super_admin')) {
-                            localStorage.setItem('auth_token', data.token);
-                            localStorage.setItem('user_data', JSON.stringify(data.user));
-                            this.success = 'Admin login successful! Redirecting...';
-                            
-                            setTimeout(() => {
-                                window.location.href = '/admin';
-                            }, 1000);
-                        } else {
-                            this.error = data.error || 'Admin login failed';
-                        }
-                    } catch (error) {
-                        console.error('Admin login error:', error);
-                        this.error = 'Network error. Please try again.';
-                    } finally {
-                        this.loading = false;
-                    }
-                },
-
-                async register() {
-                    this.loading = true;
-                    this.error = '';
-                    
-                    try {
-                        const response = await fetch('/api/auth/register', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(this.registerForm)
-                        });
-
-                        const data = await response.json();
-
-                        if (response.ok) {
-                            this.success = 'Registration successful! Your account is pending approval.';
-                            this.showRegister = false;
-                            this.resetRegisterForm();
-                        } else {
-                            this.error = data.error || 'Registration failed';
-                        }
-                    } catch (error) {
-                        console.error('Registration error:', error);
-                        this.error = 'Network error. Please try again.';
-                    } finally {
-                        this.loading = false;
-                    }
-                },
-
-                resetRegisterForm() {
-                    this.registerForm = {
-                        name: '',
-                        email: '',
-                        phone: '',
-                        password: '',
-                        association_id: ''
-                    };
+                selectAssociation(association) {
+                    // Redirect to association-specific login page
+                    window.location.href = `/association?assoc=${association.code}`;
                 }
             };
         }
