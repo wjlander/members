@@ -88,6 +88,13 @@ app.use('/api/upload', uploadRoutes);
 
 // Frontend serving with proper error handling
 app.get('/', (req, res) => {
+    // Check if this is the admin domain
+    const host = req.get('host');
+    if (host === process.env.ADMIN_DOMAIN || host === 'p.ringing.org.uk') {
+        // Redirect admin domain to /admin
+        return res.redirect('/admin');
+    }
+    
     const indexPath = path.join(__dirname, 'frontend', 'index.html');
     
     // Check if file exists
@@ -108,29 +115,17 @@ app.get('/', (req, res) => {
 
 // Admin interface
 app.get('/admin*', (req, res) => {
-    // Check if this is the admin domain
-    if (req.get('host') === process.env.ADMIN_DOMAIN) {
-        const adminPath = path.join(__dirname, 'frontend', 'admin.html');
-        const indexPath = path.join(__dirname, 'frontend', 'index.html');
-        
-        if (fs.existsSync(adminPath)) {
-            res.sendFile(adminPath);
-        } else if (fs.existsSync(indexPath)) {
-            // Fallback to index.html if admin.html doesn't exist
-            res.sendFile(indexPath);
-        } else {
-            logger.error('Admin frontend files not found');
-            res.status(500).json({ 
-                error: 'Admin frontend files not found',
-                adminPath,
-                indexPath,
-                adminExists: false,
-                indexExists: false
-            });
-        }
+    const adminPath = path.join(__dirname, 'frontend', 'admin.html');
+    
+    if (fs.existsSync(adminPath)) {
+        res.sendFile(adminPath);
     } else {
-        // Redirect to admin domain
-        res.redirect(`https://${process.env.ADMIN_DOMAIN}/admin`);
+        logger.error('Admin frontend file not found');
+        res.status(500).json({ 
+            error: 'Admin frontend file not found',
+            adminPath,
+            exists: false
+        });
     }
 });
 
