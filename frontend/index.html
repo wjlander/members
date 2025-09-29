@@ -11,921 +11,322 @@
         [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="bg-gray-50">
-    <div x-data="memberApp()" x-init="init()" x-cloak>
-        <!-- Loading Screen -->
-        <div x-show="loading" class="min-h-screen flex items-center justify-center">
-            <div class="text-center">
-                <i class="fas fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
-                <p class="text-gray-600">Loading Member Management System...</p>
-            </div>
-        </div>
-
-        <!-- Login/Welcome Screen -->
-        <div x-show="!loading && !currentUser" class="min-h-screen flex items-center justify-center py-12 px-4">
-            <div class="max-w-md w-full space-y-8">
-                <div class="text-center">
-                    <i class="fas fa-users text-6xl text-blue-600 mb-4"></i>
-                    <h2 class="text-3xl font-bold text-gray-900">Member Management System</h2>
-                    <p class="mt-2 text-sm text-gray-600">Professional member and association management</p>
-                </div>
-                
-                <div class="bg-white p-8 rounded-lg shadow-md">
-                    <div class="space-y-4">
-                        <div class="text-center">
-                            <h3 class="text-lg font-medium text-gray-900 mb-4">System Status</h3>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex items-center justify-center">
-                                    <i class="fas fa-check-circle text-green-500 mr-2"></i>
-                                    <span>Application Server: Running</span>
-                                </div>
-                                <div class="flex items-center justify-center">
-                                    <i class="fas fa-check-circle text-green-500 mr-2"></i>
-                                    <span>Database: Connected</span>
-                                </div>
-                                <div class="flex items-center justify-center">
-                                    <i class="fas fa-check-circle text-green-500 mr-2"></i>
-                                    <span>Frontend: Loaded</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="border-t pt-4">
-                            <div class="space-y-3">
-                                <button @click="showLogin = true" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
-                                    <i class="fas fa-sign-in-alt mr-2"></i>
-                                    Member Login
-                                </button>
-                                
-                                <button @click="showAdminLogin = true" class="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors">
-                                    <i class="fas fa-shield-alt mr-2"></i>
-                                    Admin Access
-                                </button>
-                                
-                                <div class="text-center">
-                                    <button @click="showRegister = true" class="text-sm text-blue-600 hover:text-blue-800">
-                                        New member? Register here
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                                    <i class="fas fa-chart-bar mr-1"></i> Reports
-                                </button>
-                            </div>
-                        </template>
-                        <template x-if="currentUser?.role === 'member'">
-                            <div class="flex space-x-2">
-                                <button @click="currentView = 'profile'" 
-                                        :class="currentView === 'profile' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-blue-600'"
-                                        class="px-3 py-2 rounded transition-colors">
-                                    <i class="fas fa-user mr-1"></i> Profile
-                                </button>
-                                <button @click="currentView = 'dues'" 
-                                        :class="currentView === 'dues' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-blue-600'"
-                                        class="px-3 py-2 rounded transition-colors">
-                                    <i class="fas fa-credit-card mr-1"></i> Dues
-                                </button>
-                            </div>
-                        </template>
-                        <div class="flex items-center space-x-2">
-                            <span class="text-sm text-gray-600" x-text="currentUser?.name"></span>
-                            <button @click="logout()" class="text-red-600 hover:text-red-800 transition-colors">
-                                <i class="fas fa-sign-out-alt"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </nav>
-
-        <!-- Login Form -->
-        <div x-show="!currentUser" class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-md w-full space-y-8">
-                <div>
-                    <div class="text-center">
-                        <i class="fas fa-users text-6xl text-blue-600 mb-4"></i>
-                        <h2 class="text-3xl font-bold text-gray-900">Member Portal</h2>
-                        <p class="mt-2 text-sm text-gray-600">Sign in to your association account</p>
-                    </div>
-                </div>
-                <div class="bg-white p-8 rounded-lg shadow-md">
-                    <!-- Association Selection -->
-                    <div class="mb-6" x-show="!selectedAssociation">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Association</label>
-                        <div class="space-y-2">
-                            <template x-for="association in associations" :key="association.id">
-                                <button @click="selectAssociation(association)"
-                                        class="w-full text-left p-4 border rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors">
-                                    <div class="font-semibold" x-text="association.name"></div>
-                                    <div class="text-sm text-gray-600" x-text="association.description"></div>
-                                </button>
-                            </template>
-                        </div>
-                    </div>
-
-                    <!-- Login Form -->
-                    <form @submit.prevent="login()" x-show="selectedAssociation" class="space-y-6">
-                        <div class="flex items-center justify-between">
-                            <h3 class="text-lg font-medium" x-text="selectedAssociation?.name"></h3>
-                            <button type="button" @click="selectedAssociation = null" class="text-sm text-blue-600 hover:text-blue-800">
-                                Change Association
-                            </button>
-                        </div>
-
-                        <div>
-                            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                            <input x-model="loginForm.email" type="email" id="email" required
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-
-                        <div>
-                            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                            <input x-model="loginForm.password" type="password" id="password" required
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-
-                        <button type="submit" :disabled="loading"
-                                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50">
-                            <span x-show="!loading">Sign In</span>
-                            <span x-show="loading">
-                                <i class="fas fa-spinner fa-spin mr-2"></i>
-                                Signing in...
-                            </span>
-                        </button>
-
-                        <div class="text-center">
-                            <button type="button" @click="showRegisterForm = true" class="text-sm text-blue-600 hover:text-blue-800">
-                                Don't have an account? Register here
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Registration Modal -->
-        <div x-show="showRegisterForm" x-cloak class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                <div class="mt-3">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-medium text-gray-900">Register for <span x-text="selectedAssociation?.name"></span></h3>
-                        <button @click="showRegisterForm = false" class="text-gray-400 hover:text-gray-600">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    
-                    <form @submit.prevent="register()" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Full Name</label>
-                            <input x-model="registerForm.name" type="text" required
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Email</label>
-                            <input x-model="registerForm.email" type="email" required
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Phone</label>
-                            <input x-model="registerForm.phone" type="tel"
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Password</label>
-                            <input x-model="registerForm.password" type="password" required minlength="6"
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Confirm Password</label>
-                            <input x-model="registerForm.confirmPassword" type="password" required
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        </div>
-
-                        <div class="flex justify-end space-x-3 pt-4">
-                            <button type="button" @click="showRegisterForm = false"
-                                    class="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">
-                                Cancel
-                            </button>
-                            <button type="submit" :disabled="loading"
-                                    class="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">
-                                <span x-show="!loading">Register</span>
-                                <span x-show="loading">
-                                    <i class="fas fa-spinner fa-spin mr-1"></i>
-                                    Registering...
-                                </span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Main Content -->
-        <main class="max-w-7xl mx-auto py-6 px-4" x-show="currentUser">
-            <!-- Member Dashboard -->
-            <div x-show="currentUser?.role === 'member' && currentView === 'profile'">
-                <div class="bg-white shadow rounded-lg">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h2 class="text-xl font-semibold text-gray-900">My Profile</h2>
-                    </div>
-                    <div class="p-6">
-                        <form @submit.prevent="updateProfile()" class="space-y-6">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Full Name</label>
-                                    <input x-model="profileForm.name" type="text" required
-                                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Email</label>
-                                    <input x-model="profileForm.email" type="email" required
-                                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Phone</label>
-                                    <input x-model="profileForm.phone" type="tel"
-                                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Member ID</label>
-                                    <input :value="profileForm.member_id" readonly
-                                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50">
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Address</label>
-                                <textarea x-model="profileForm.address" rows="3"
-                                          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
-                            </div>
-
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <span class="text-sm font-medium text-gray-700">Membership Status: </span>
-                                    <span :class="profileForm.status === 'active' ? 'text-green-600' : profileForm.status === 'pending' ? 'text-yellow-600' : 'text-red-600'"
-                                          x-text="profileForm.status" class="font-semibold"></span>
-                                </div>
-                                <button type="submit" :disabled="loading"
-                                        class="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">
-                                    Update Profile
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Member Dues -->
-            <div x-show="currentUser?.role === 'member' && currentView === 'dues'">
-                <div class="bg-white shadow rounded-lg">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h2 class="text-xl font-semibold text-gray-900">Membership Dues</h2>
-                    </div>
-                    <div class="p-6">
-                        <div class="mb-6">
-                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                <div class="flex justify-between items-center">
-                                    <div>
-                                        <h3 class="text-lg font-semibold text-blue-900">Current Dues Status</h3>
-                                        <p class="text-blue-700">Outstanding Amount: <span class="font-bold text-xl">$<span x-text="memberDues.outstanding || 0"></span></span></p>
-                                    </div>
-                                    <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" x-show="memberDues.outstanding > 0">
-                                        Pay Now
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Payment History</h3>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    <template x-for="payment in memberDues.payments || []" :key="payment.id">
-                                        <tr>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" x-text="new Date(payment.created).toLocaleDateString()"></td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" x-text="payment.type"></td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$<span x-text="payment.amount"></span></td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <span :class="payment.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'"
-                                                      class="px-2 py-1 text-xs font-semibold rounded-full" x-text="payment.status"></span>
-                                            </td>
-                                        </tr>
-                                    </template>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Admin Members View -->
-            <div x-show="currentUser?.role === 'admin' && currentView === 'members'">
-                <div class="bg-white shadow rounded-lg">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <div class="flex justify-between items-center">
-                            <h2 class="text-xl font-semibold text-gray-900">Members</h2>
-                            <div class="flex space-x-3">
-                                <button @click="loadMembers()" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
-                                    <i class="fas fa-sync-alt mr-1"></i> Refresh
-                                </button>
-                                <button @click="exportMembers()" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-                                    <i class="fas fa-download mr-1"></i> Export
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="p-6">
-                        <!-- Filters -->
-                        <div class="mb-6 flex space-x-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Status Filter</label>
-                                <select x-model="memberFilter.status" @change="loadMembers()"
-                                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="">All Status</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                    <option value="suspended">Suspended</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Search</label>
-                                <input x-model="memberFilter.search" @input="debounceSearch()" type="text" placeholder="Name or email..."
-                                       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                            </div>
-                        </div>
-
-                        <!-- Members Table -->
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    <template x-for="member in members" :key="member.id">
-                                        <tr>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <div class="text-sm font-medium text-gray-900" x-text="member.name"></div>
-                                                <div class="text-sm text-gray-500" x-text="member.member_id"></div>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" x-text="member.email"></td>
-                                            <td class="px-6 py-4 whitespace-nowrap">
-                                                <span :class="{
-                                                    'bg-green-100 text-green-800': member.status === 'active',
-                                                    'bg-yellow-100 text-yellow-800': member.status === 'pending',
-                                                    'bg-red-100 text-red-800': member.status === 'suspended',
-                                                    'bg-gray-100 text-gray-800': member.status === 'inactive'
-                                                }" class="px-2 py-1 text-xs font-semibold rounded-full" x-text="member.status"></span>
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" x-text="new Date(member.created).toLocaleDateString()"></td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                <div class="flex space-x-2">
-                                                    <button @click="viewMember(member)" class="text-blue-600 hover:text-blue-900">
-                                                        <i class="fas fa-eye"></i>
-                                                    </button>
-                                                    <button @click="editMember(member)" class="text-green-600 hover:text-green-900">
-                                                        <i class="fas fa-edit"></i>
-                                                    </button>
-                                                    <template x-if="member.status === 'pending'">
-                                                        <button @click="approveMember(member)" class="text-purple-600 hover:text-purple-900">
-                                                            <i class="fas fa-check"></i>
-                                                        </button>
-                                                    </template>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </template>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Admin Reports View -->
-            <div x-show="currentUser?.role === 'admin' && currentView === 'reports'">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <!-- Summary Cards -->
-                    <div class="bg-white overflow-hidden shadow rounded-lg">
-                        <div class="p-5">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <i class="fas fa-users text-blue-500 text-2xl"></i>
-                                </div>
-                                <div class="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt class="text-sm font-medium text-gray-500 truncate">Total Members</dt>
-                                        <dd class="text-lg font-medium text-gray-900" x-text="reports.totalMembers || 0"></dd>
-                                    </dl>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white overflow-hidden shadow rounded-lg">
-                        <div class="p-5">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <i class="fas fa-user-check text-green-500 text-2xl"></i>
-                                </div>
-                                <div class="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt class="text-sm font-medium text-gray-500 truncate">Active Members</dt>
-                                        <dd class="text-lg font-medium text-gray-900" x-text="reports.activeMembers || 0"></dd>
-                                    </dl>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white overflow-hidden shadow rounded-lg">
-                        <div class="p-5">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <i class="fas fa-user-clock text-yellow-500 text-2xl"></i>
-                                </div>
-                                <div class="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt class="text-sm font-medium text-gray-500 truncate">Pending Approval</dt>
-                                        <dd class="text-lg font-medium text-gray-900" x-text="reports.pendingMembers || 0"></dd>
-                                    </dl>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white overflow-hidden shadow rounded-lg">
-                        <div class="p-5">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <i class="fas fa-dollar-sign text-purple-500 text-2xl"></i>
-                                </div>
-                                <div class="ml-5 w-0 flex-1">
-                                    <dl>
-                                        <dt class="text-sm font-medium text-gray-500 truncate">Monthly Revenue</dt>
-                                        <dd class="text-lg font-medium text-gray-900">$<span x-text="reports.monthlyRevenue || 0"></span></dd>
-                                    </dl>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recent Activity -->
-                <div class="bg-white shadow rounded-lg">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h3 class="text-lg font-semibold text-gray-900">Recent Activity</h3>
-                    </div>
-                    <div class="p-6">
-                        <div class="flow-root">
-                            <ul class="-mb-8">
-                                <template x-for="(activity, index) in reports.recentActivity || []" :key="activity.id">
-                                    <li>
-                                        <div class="relative pb-8" x-show="index < reports.recentActivity.length - 1">
-                                            <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"></span>
-                                        </div>
-                                        <div class="relative flex space-x-3">
-                                            <div>
-                                                <span class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center ring-8 ring-white">
-                                                    <i :class="activity.icon || 'fas fa-user'" class="text-white text-sm"></i>
-                                                </span>
-                                            </div>
-                                            <div class="min-w-0 flex-1">
-                                                <div class="text-sm text-gray-900" x-text="activity.description"></div>
-                                                <div class="text-sm text-gray-500" x-text="activity.timestamp"></div>
-                                            </div>
-                                        </div>
-                                    </li>
-                                </template>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Admin Mailing Lists View -->
-            <div x-show="currentUser?.role === 'admin' && currentView === 'mailing-lists'">
-                <div class="bg-white shadow rounded-lg">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <div class="flex justify-between items-center">
-                            <h2 class="text-xl font-semibold text-gray-900">Mailing Lists</h2>
-                            <button @click="showCreateMailingList = true" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                                <i class="fas fa-plus mr-1"></i> Create List
-                            </button>
-                        </div>
-                    </div>
-                    <div class="p-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <template x-for="list in mailingLists" :key="list.id">
-                                <div class="border rounded-lg p-4">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <h3 class="font-semibold text-gray-900" x-text="list.name"></h3>
-                                        <span :class="list.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
-                                              class="px-2 py-1 text-xs font-semibold rounded-full" x-text="list.status"></span>
-                                    </div>
-                                    <p class="text-sm text-gray-600 mb-3" x-text="list.description"></p>
-                                    <div class="flex justify-between items-center text-sm">
-                                        <span class="text-gray-500">
-                                            <span x-text="getSubscriberCount(list.id)"></span> subscribers
-                                        </span>
-                                        <div class="flex space-x-2">
-                                            <button @click="editMailingList(list)" class="text-blue-600 hover:text-blue-900">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button @click="viewSubscribers(list)" class="text-green-600 hover:text-green-900">
-                                                <i class="fas fa-users"></i>
-                                            </button>
-                                            <button @click="exportSubscribers(list)" class="text-purple-600 hover:text-purple-900">
-                                                <i class="fas fa-download"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <!-- Create Mailing List Modal -->
-        <div x-show="showCreateMailingList" x-cloak class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                <div class="mt-3">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-medium text-gray-900">Create Mailing List</h3>
-                        <button @click="showCreateMailingList = false" class="text-gray-400 hover:text-gray-600">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    
-                    <form @submit.prevent="createMailingList()" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">List Name</label>
-                            <input x-model="mailingListForm.name" type="text" required
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Description</label>
-                            <textarea x-model="mailingListForm.description" rows="3"
-                                      class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Type</label>
-                            <select x-model="mailingListForm.type" required
-                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                <option value="">Select type...</option>
-                                <option value="general">General</option>
-                                <option value="announcements">Announcements</option>
-                                <option value="events">Events</option>
-                                <option value="newsletter">Newsletter</option>
-                                <option value="urgent">Urgent</option>
-                                <option value="social">Social</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Moderator Email</label>
-                            <input x-model="mailingListForm.moderator_email" type="email"
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        </div>
-
-                        <div class="flex items-center">
-                            <input x-model="mailingListForm.auto_subscribe_new_members" type="checkbox" id="auto_subscribe"
-                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                            <label for="auto_subscribe" class="ml-2 block text-sm text-gray-900">
-                                Auto-subscribe new members
-                            </label>
-                        </div>
-
-                        <div class="flex justify-end space-x-3 pt-4">
-                            <button type="button" @click="showCreateMailingList = false"
-                                    class="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">
-                                Cancel
-                            </button>
-                            <button type="submit" :disabled="loading"
-                                    class="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">
-                                <span x-show="!loading">Create List</span>
-                                <span x-show="loading">
-                                    <i class="fas fa-spinner fa-spin mr-1"></i>
-                                    Creating...
-                                </span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Error Messages -->
-        <div x-show="error" x-transition class="fixed bottom-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
-            <div class="flex items-center space-x-2">
-                <i class="fas fa-exclamation-circle"></i>
-                <span x-text="error"></span>
-                <button @click="error = ''" class="ml-2 text-white hover:text-gray-200">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- Success Messages -->
-        <div x-show="success" x-transition class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
-            <div class="flex items-center space-x-2">
-                <i class="fas fa-check-circle"></i>
-                <span x-text="success"></span>
-                <button @click="success = ''" class="ml-2 text-white hover:text-gray-200">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- Login Modal -->
-        <div x-show="showLogin" x-cloak class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                <div class="mt-3">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-medium text-gray-900">Member Login</h3>
-                        <button @click="showLogin = false" class="text-gray-400 hover:text-gray-600">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    
-                    <form @submit.prevent="login()" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Email</label>
-                            <input x-model="loginForm.email" type="email" required
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Password</label>
-                            <input x-model="loginForm.password" type="password" required
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-                        
-                        <div class="flex justify-end space-x-3 pt-4">
-                            <button type="button" @click="showLogin = false"
-                                    class="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">
-                                Cancel
-                            </button>
-                            <button type="submit" :disabled="loading"
-                                    class="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">
-                                <span x-show="!loading">Login</span>
-                                <span x-show="loading">
-                                    <i class="fas fa-spinner fa-spin mr-1"></i>
-                                    Logging in...
-                                </span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Admin Login Modal -->
-        <div x-show="showAdminLogin" x-cloak class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                <div class="mt-3">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-medium text-gray-900">Admin Login</h3>
-                        <button @click="showAdminLogin = false" class="text-gray-400 hover:text-gray-600">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    
-                    <form @submit.prevent="adminLogin()" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Admin Email</label>
-                            <input x-model="adminLoginForm.email" type="email" required
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Password</label>
-                            <input x-model="adminLoginForm.password" type="password" required
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
-                        </div>
-                        
-                        <div class="flex justify-end space-x-3 pt-4">
-                            <button type="button" @click="showAdminLogin = false"
-                                    class="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">
-                                Cancel
-                            </button>
-                            <button type="submit" :disabled="loading"
-                                    class="px-4 py-2 text-sm text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50">
-                                <span x-show="!loading">Admin Login</span>
-                                <span x-show="loading">
-                                    <i class="fas fa-spinner fa-spin mr-1"></i>
-                                    Logging in...
-                                </span>
-                            </button>
-                        </div>
-                    </form>
-        <!-- Main Application (when logged in) -->
-        <div x-show="!loading && currentUser" class="min-h-screen bg-gray-50">
-            <nav class="bg-white shadow-lg">
-                <div class="max-w-7xl mx-auto px-4">
-                    <div class="flex justify-between items-center py-4">
-                        <div class="flex items-center space-x-4">
-                            <h1 class="text-xl font-bold text-gray-800">
-                                <i class="fas fa-users text-blue-600"></i>
-                                Member Management
-                            </h1>
-                            <span x-text="currentUser?.association_name" class="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded"></span>
-                        </div>
-                        <div class="flex items-center space-x-4">
-                            <span class="text-sm text-gray-600" x-text="currentUser?.name"></span>
-                            <button @click="logout()" class="text-red-600 hover:text-red-800 transition-colors">
-                                <i class="fas fa-sign-out-alt"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-                </div>
-            <main class="max-w-7xl mx-auto py-6 px-4">
-                <div class="bg-white shadow rounded-lg p-6">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-4">
-                        Welcome, <span x-text="currentUser?.name"></span>!
-                    </h2>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="bg-blue-50 p-4 rounded-lg">
-                            <div class="flex items-center">
-                                <i class="fas fa-user text-blue-600 text-2xl mr-3"></i>
-                                <div>
-                                    <h3 class="font-semibold text-blue-900">Profile</h3>
-                                    <p class="text-sm text-blue-700">Manage your information</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-green-50 p-4 rounded-lg" x-show="currentUser?.role === 'admin'">
-                            <div class="flex items-center">
-                                <i class="fas fa-users text-green-600 text-2xl mr-3"></i>
-                                <div>
-                                    <h3 class="font-semibold text-green-900">Members</h3>
-                                    <p class="text-sm text-green-700">Manage association members</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-purple-50 p-4 rounded-lg" x-show="currentUser?.role === 'admin'">
-                            <div class="flex items-center">
-                                <i class="fas fa-envelope text-purple-600 text-2xl mr-3"></i>
-                                <div>
-                                    <h3 class="font-semibold text-purple-900">Communications</h3>
-                                    <p class="text-sm text-purple-700">Email and announcements</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <h4 class="font-semibold text-yellow-800 mb-2">
-                            <i class="fas fa-info-circle mr-2"></i>
-                            System Information
-                        </h4>
-                        <p class="text-sm text-yellow-700">
-                            You are logged in as <strong x-text="currentUser?.role"></strong> 
-                            for <strong x-text="currentUser?.association_name"></strong>.
-                        </p>
-                    </div>
-                </div>
-            </main>
-        </div>
-            </div>
-        <!-- Error Messages -->
-        <div x-show="error" x-transition class="fixed bottom-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
-            <div class="flex items-center space-x-2">
-                <i class="fas fa-exclamation-circle"></i>
-                <span x-text="error"></span>
-                <button @click="error = ''" class="ml-2 text-white hover:text-gray-200">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
-        </div>
-        <!-- Success Messages -->
-        <div x-show="success" x-transition class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
-            <div class="flex items-center space-x-2">
-                <i class="fas fa-check-circle"></i>
-                <span x-text="success"></span>
-                <button @click="success = ''" class="ml-2 text-white hover:text-gray-200">
-                    <i class="fas fa-times"></i>
-                </button>
+<body class="bg-gray-50" x-data="memberApp()" x-init="init()">
+    <!-- Loading Screen -->
+    <div x-show="loading" x-cloak class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <div class="flex items-center space-x-3">
+                <i class="fas fa-spinner fa-spin text-blue-600"></i>
+                <span>Loading...</span>
             </div>
         </div>
     </div>
-    <script src="js/app.js"></script>
+
+    <!-- Error/Success Messages -->
+    <div x-show="error" x-cloak class="fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50">
+        <span x-text="error"></span>
+        <button @click="error = ''" class="ml-2 text-red-700 hover:text-red-900">×</button>
+    </div>
+
+    <div x-show="success" x-cloak class="fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50">
+        <span x-text="success"></span>
+        <button @click="success = ''" class="ml-2 text-green-700 hover:text-green-900">×</button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="max-w-md w-full space-y-8">
+            <!-- Header -->
+            <div class="text-center">
+                <i class="fas fa-users text-6xl text-blue-600 mb-4"></i>
+                <h2 class="text-3xl font-bold text-gray-900">Member Management System</h2>
+                <p class="mt-2 text-sm text-gray-600">Professional member and association management</p>
+            </div>
+
+            <!-- System Status Card -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="text-lg font-medium mb-4 text-center">System Status</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-center">
+                        <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                        <span>Application Server: Running</span>
+                    </div>
+                    <div class="flex items-center justify-center">
+                        <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                        <span>Database: Connected</span>
+                    </div>
+                    <div class="flex items-center justify-center">
+                        <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                        <span>Frontend: Loaded</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="mt-6 space-y-3">
+                    <button @click="showMemberLogin = true" 
+                            class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center">
+                        <i class="fas fa-sign-in-alt mr-2"></i>
+                        Member Login
+                    </button>
+                    
+                    <button @click="showAdminLogin = true" 
+                            class="w-full bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center">
+                        <i class="fas fa-shield-alt mr-2"></i>
+                        Admin Access
+                    </button>
+                    
+                    <div class="text-center">
+                        <a href="#" @click.prevent="showRegister = true" class="text-blue-600 hover:text-blue-800 text-sm">
+                            New member? Register here
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Member Login Modal -->
+    <div x-show="showMemberLogin" x-cloak class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium">Member Login</h3>
+                <button @click="showMemberLogin = false" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form @submit.prevent="memberLogin()">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" x-model="memberLoginForm.email" required
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" x-model="memberLoginForm.password" required
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Association</label>
+                        <select x-model="memberLoginForm.association_id" required
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select Association</option>
+                            <template x-for="assoc in associations" :key="assoc.id">
+                                <option :value="assoc.id" x-text="assoc.name"></option>
+                            </template>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" :disabled="loading"
+                            class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50">
+                        <span x-show="!loading">Sign In</span>
+                        <span x-show="loading">Signing In...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Login Modal -->
+    <div x-show="showAdminLogin" x-cloak class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium">Admin Login</h3>
+                <button @click="showAdminLogin = false" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form @submit.prevent="adminLogin()">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" x-model="adminLoginForm.email" required
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" x-model="adminLoginForm.password" required
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Association</label>
+                        <select x-model="adminLoginForm.association_id" required
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
+                            <option value="">Select Association</option>
+                            <template x-for="assoc in associations" :key="assoc.id">
+                                <option :value="assoc.id" x-text="assoc.name"></option>
+                            </template>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" :disabled="loading"
+                            class="w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 disabled:opacity-50">
+                        <span x-show="!loading">Admin Sign In</span>
+                        <span x-show="loading">Signing In...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Registration Modal -->
+    <div x-show="showRegister" x-cloak class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4 max-h-screen overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium">Member Registration</h3>
+                <button @click="showRegister = false" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form @submit.prevent="register()">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Full Name</label>
+                        <input type="text" x-model="registerForm.name" required
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" x-model="registerForm.email" required
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Phone (Optional)</label>
+                        <input type="tel" x-model="registerForm.phone"
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" x-model="registerForm.password" required minlength="8"
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Association</label>
+                        <select x-model="registerForm.association_id" required
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select Association</option>
+                            <template x-for="assoc in associations" :key="assoc.id">
+                                <option :value="assoc.id" x-text="assoc.name"></option>
+                            </template>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" :disabled="loading"
+                            class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 disabled:opacity-50">
+                        <span x-show="!loading">Register</span>
+                        <span x-show="loading">Registering...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         function memberApp() {
             return {
-                loading: true,
+                loading: false,
                 error: '',
                 success: '',
-                currentUser: null,
-                showLogin: false,
+                showMemberLogin: false,
                 showAdminLogin: false,
                 showRegister: false,
+                associations: [],
                 
-                loginForm: {
+                memberLoginForm: {
                     email: '',
-                    password: ''
+                    password: '',
+                    association_id: ''
                 },
                 
                 adminLoginForm: {
                     email: '',
-                    password: ''
+                    password: '',
+                    association_id: ''
                 },
                 
+                registerForm: {
+                    name: '',
+                    email: '',
+                    phone: '',
+                    password: '',
+                    association_id: ''
+                },
+
                 async init() {
-                    try {
-                        // Check if user is already logged in
-                        const token = localStorage.getItem('auth_token');
-                        if (token) {
-                            await this.checkAuthStatus();
-                        }
-                    } catch (error) {
-                        console.error('Init error:', error);
-                    } finally {
-                        this.loading = false;
-                    }
+                    await this.loadAssociations();
                 },
-                
-                async checkAuthStatus() {
+
+                async loadAssociations() {
                     try {
-                        const response = await fetch('/api/auth/me', {
-                            headers: {
-                                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-                            }
-                        });
-                        
+                        const response = await fetch('/api/associations');
                         if (response.ok) {
-                            this.currentUser = await response.json();
+                            this.associations = await response.json();
                         } else {
-                            localStorage.removeItem('auth_token');
+                            // Fallback - create sample associations for demo
+                            this.associations = [
+                                { id: '1', name: 'Sample Bell Ringing Association' },
+                                { id: '2', name: 'Test Ringers Guild' }
+                            ];
                         }
                     } catch (error) {
-                        console.error('Auth check error:', error);
-                        localStorage.removeItem('auth_token');
+                        console.error('Failed to load associations:', error);
+                        // Fallback associations
+                        this.associations = [
+                            { id: '1', name: 'Sample Bell Ringing Association' },
+                            { id: '2', name: 'Test Ringers Guild' }
+                        ];
                     }
                 },
-                
-                async login() {
+
+                async memberLogin() {
                     this.loading = true;
+                    this.error = '';
+                    
                     try {
                         const response = await fetch('/api/auth/login', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify(this.loginForm)
+                            body: JSON.stringify(this.memberLoginForm)
                         });
-                        
+
                         const data = await response.json();
-                        
+
                         if (response.ok) {
                             localStorage.setItem('auth_token', data.token);
-                            this.currentUser = data.user;
-                            this.showLogin = false;
-                            this.showSuccess('Login successful!');
+                            localStorage.setItem('user_data', JSON.stringify(data.user));
+                            this.success = 'Login successful! Redirecting...';
+                            
+                            setTimeout(() => {
+                                window.location.href = '/dashboard';
+                            }, 1000);
                         } else {
-                            this.showError(data.error || 'Login failed');
+                            this.error = data.error || 'Login failed';
                         }
                     } catch (error) {
-                        this.showError('Login failed. Please try again.');
+                        console.error('Login error:', error);
+                        this.error = 'Network error. Please try again.';
                     } finally {
                         this.loading = false;
                     }
                 },
-                
+
                 async adminLogin() {
                     this.loading = true;
+                    this.error = '';
+                    
                     try {
                         const response = await fetch('/api/auth/login', {
                             method: 'POST',
@@ -934,38 +335,66 @@
                             },
                             body: JSON.stringify(this.adminLoginForm)
                         });
-                        
+
                         const data = await response.json();
-                        
+
                         if (response.ok && (data.user.role === 'admin' || data.user.role === 'super_admin')) {
                             localStorage.setItem('auth_token', data.token);
-                            this.currentUser = data.user;
-                            this.showAdminLogin = false;
-                            this.showSuccess('Admin login successful!');
+                            localStorage.setItem('user_data', JSON.stringify(data.user));
+                            this.success = 'Admin login successful! Redirecting...';
+                            
+                            setTimeout(() => {
+                                window.location.href = '/admin';
+                            }, 1000);
                         } else {
-                            this.showError(data.error || 'Admin login failed');
+                            this.error = data.error || 'Admin login failed';
                         }
                     } catch (error) {
-                        this.showError('Admin login failed. Please try again.');
+                        console.error('Admin login error:', error);
+                        this.error = 'Network error. Please try again.';
                     } finally {
                         this.loading = false;
                     }
                 },
-                
-                logout() {
-                    localStorage.removeItem('auth_token');
-                    this.currentUser = null;
-                    this.showSuccess('Logged out successfully');
+
+                async register() {
+                    this.loading = true;
+                    this.error = '';
+                    
+                    try {
+                        const response = await fetch('/api/auth/register', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(this.registerForm)
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            this.success = 'Registration successful! Your account is pending approval.';
+                            this.showRegister = false;
+                            this.resetRegisterForm();
+                        } else {
+                            this.error = data.error || 'Registration failed';
+                        }
+                    } catch (error) {
+                        console.error('Registration error:', error);
+                        this.error = 'Network error. Please try again.';
+                    } finally {
+                        this.loading = false;
+                    }
                 },
-                
-                showError(message) {
-                    this.error = message;
-                    setTimeout(() => this.error = '', 5000);
-                },
-                
-                showSuccess(message) {
-                    this.success = message;
-                    setTimeout(() => this.success = '', 5000);
+
+                resetRegisterForm() {
+                    this.registerForm = {
+                        name: '',
+                        email: '',
+                        phone: '',
+                        password: '',
+                        association_id: ''
+                    };
                 }
             };
         }
