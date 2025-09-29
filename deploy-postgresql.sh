@@ -9,7 +9,7 @@ set -e  # Exit on any error
 # Configuration
 POSTGRES_VERSION="15"
 APP_USER="memberapp"
-APP_DIR="/opt/member-management"
+APP_DIR="/tmp/member-management"
 DATA_DIR="/var/lib/member-management"
 NGINX_SITE="member-management"
 DB_NAME="member_management"
