@@ -125,7 +125,7 @@ router.post('/login', async (req, res) => {
 
         const { email, password, association_id } = value;
 
-        // Get user with association info - super admins don't need association_id
+        // Get user with association info
         const result = await db.query(`
             SELECT 
                 u.*,
@@ -156,17 +156,9 @@ router.post('/login', async (req, res) => {
                 });
                 return res.status(401).json({ error: 'Invalid credentials' });
             }
-            
-            // For regular users, association_id should match if they have one
-            if (user.association_id && association_id && user.association_id !== association_id) {
-                logger.warn('Association mismatch for regular user', { email, role: user.role });
-                return res.status(401).json({ error: 'Invalid credentials' });
-            }
         } else {
             // Super admin can login regardless of association_id parameter
             logger.info('Super admin login attempt', { email });
-        }
-            return res.status(401).json({ error: 'Invalid credentials' });
         }
 
         // Check password
